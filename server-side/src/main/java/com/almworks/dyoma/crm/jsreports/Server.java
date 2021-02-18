@@ -1,3 +1,5 @@
+package com.almworks.dyoma.crm.jsreports;
+
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -12,7 +14,7 @@ public class Server {
         HttpServer server = HttpServer.create(host, 10);
         try {
             server.start();
-            System.out.printf("Server started on %s:%d\n", address, port);
+            System.out.printf("com.almworks.dyoma.crm.jsreports.Server started on %s:%d\n", address, port);
         } catch (Exception e) {
             System.err.println(e);
         }
