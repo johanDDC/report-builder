@@ -10,9 +10,9 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>server-side</module>
         <module>server-components</module>
         <module>web-ui</module>
+        <module>server-side</module>
     </modules>
 
     <properties>
