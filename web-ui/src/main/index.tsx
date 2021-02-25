@@ -2,4 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import HelloWorld from './HelloWorld';
 
-ReactDOM.render(<HelloWorld />, document.querySelector('#root'));
+document.addEventListener('DOMContentLoaded', () => {
+  ReactDOM.render(<HelloWorld />, document.querySelector('#root'));
+});
