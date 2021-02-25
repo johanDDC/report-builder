@@ -1,7 +1,8 @@
 package com.almworks.dyoma.crm.jsreports;
 
-import jakarta.inject.Singleton;
 import org.glassfish.jersey.spi.Contract;
+
+import javax.inject.Singleton;
 
 /**
  * @author dyoma
