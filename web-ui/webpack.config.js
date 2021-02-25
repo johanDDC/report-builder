@@ -7,7 +7,7 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
-            'server2', 'main', 'js'),
+            'jsreports', 'js'),
         filename: '[name].js'
     },
     externals: {

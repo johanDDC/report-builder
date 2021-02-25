@@ -1,22 +1,27 @@
 package com.almworks.dyoma.crm.jsreports;
 
-import com.sun.net.httpserver.HttpServer;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
+public class Server extends BaseServerMain {
+    @Override
+    protected void registerComponents(ResourceConfig rc) {
+        rc.registerClasses(HelloWorldServerComponent.class);
+    }
 
-public class Server {
-    private static final String address = "localhost";
-    private static final int port = 8080;
+    @Override
+    protected @NotNull HttpHandler createStaticHandler() {
+        return StaticHandler.ClHelper.create(BaseServerMain.class)
+          .addSfRoot("js")
+          .addSfRoot("resources")
+          .addFile("index.html")
+          .ignorePath("/rest")
+          .lastResort("index.html")
+          .getHandler();
+    }
 
-    public static void main(String[] args) throws IOException {
-        InetSocketAddress host = new InetSocketAddress(address, port);
-        HttpServer server = HttpServer.create(host, 10);
-        try {
-            server.start();
-            System.out.printf("com.almworks.dyoma.crm.jsreports.Server started on %s:%d\n", address, port);
-        } catch (Exception e) {
-            System.err.println(e);
-        }
+    public static void main(String[] args) throws Exception {
+        new Server().launch();
     }
 }

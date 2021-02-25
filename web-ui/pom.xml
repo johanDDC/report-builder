@@ -45,27 +45,15 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>ts compile</id>
+                        <id>run webpack</id>
                         <goals>
-                            <goal>webpack</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <arguments>--progress --profile --colors --debug --devtool source-map --output-pathinfo
-                                --bail
-                            </arguments>
+                            <arguments>run webpack</arguments>
                         </configuration>
                     </execution>
-<!--                    <execution>-->
-<!--                        <id>ts test</id>-->
-<!--                        <phase>test</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>npm</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <arguments>run test</arguments>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
         </plugins>
