@@ -21,6 +21,11 @@
             <artifactId>server-components</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.almworks.dyoma.crm.jsreports</groupId>
+            <artifactId>web-ui</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.containers/jersey-container-grizzly2-http -->
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>

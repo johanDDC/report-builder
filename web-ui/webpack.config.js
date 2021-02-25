@@ -6,7 +6,7 @@ module.exports = {
         "server": path.join(__dirname, 'src', 'main', 'index.tsx')
     },
     output: {
-        path: path.join(__dirname, '..', 'server-side', 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
+        path: path.join(__dirname, 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
             'jsreports', 'js'),
         filename: '[name].js'
     },
