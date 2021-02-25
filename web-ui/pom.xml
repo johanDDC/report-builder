@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <node.version>v10.15.3</node.version>
+        <node.version>v15.10.0</node.version>
     </properties>
 
     <build>
@@ -21,7 +21,7 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.11.0</version>
+                <version>1.11.2</version>
                 <configuration>
                     <nodeVersion>${node.version}</nodeVersion>
                     <workingDirectory>./</workingDirectory>
@@ -33,6 +33,16 @@
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <phase>initialize</phase>
+                    </execution>
+                    <execution>
+                        <id>vers</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <arguments>-v</arguments>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>npm install</id>

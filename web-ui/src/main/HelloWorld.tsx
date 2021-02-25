@@ -1,44 +1,30 @@
 import React from "react";
 // @ts-ignore
 import axios from "axios"
+import {withLoadedPromiseAndParams} from "./utils";
 
 interface State {
     message: string,
-    time: string
+    time: Date
 }
 
-class HelloWorld extends React.Component<object, State> {
-    constructor(props: object) {
-        super(props);
-        this.state = {
-            message: "loading",
-            time: "",
-        };
-        this.requestState();
-    }
-
-    requestState = () => {
-        axios.get('/rest/api/v1/helloWorld/')
-            .then(response => {
-                if (response.status == 200) {
-                    this.setState({
-                        message: response.data.message,
-                        time: response.data.time.toString(),
-                    });
-                } else {
-                    console.log(response.status, response.statusText);
-                }
-            }).catch(err => console.log(err));
-    }
-
-    render() {
-        return (
-            <div>
-                <h1>Message: {this.state.message}</h1>
-                <h1>Time: {this.state.time}</h1>
-            </div>
-        );
-    }
+function requestState(): Promise<State> {
+    return axios.get('/rest/api/v1/helloWorld/')
+        .then(response => {
+            return {
+                message: response.data.message,
+                time: new Date(response.data.time),
+            };
+        });
 }
+
+function LoadedHelloWorld(props: { data: State }) {
+    return <div>
+            <h1>Message: {props.data.message}</h1>
+            <h1>Time: {props.data.time.toString()}</h1>
+        </div>
+}
+
+const HelloWorld = withLoadedPromiseAndParams(requestState, LoadedHelloWorld, {});
 
 export default HelloWorld;
