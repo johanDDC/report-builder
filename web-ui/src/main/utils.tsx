@@ -13,14 +13,15 @@ type LoadPromiseProps<D, P> = {
   /** Displays failure message (if failed) */
   failure?: RComponent<{ failure: any }>,
   /** This component is rendered until data load is done (either successfully or with failure) */
-  progress?: RComponent<any>
-} & P;
+  progress?: RComponent<any>,
+  additional: P
+};
 
 /**
  * Adapt data renderer to Promise renderer. Optionally, renders loading state and failed load.
  */
 export function LoadPromise<D, P>(props: LoadPromiseProps<D, P>) {
-  const [loaded, setLoaded] = useState(null);
+  const [loaded, setLoaded]: [D, (d:D) => void] = useState(null);
   const [failure, setFailure] = useState(null);
   const promise: MutableRefObject<Promise<D>> = useRef(null);
   if (promise.current == null) {
@@ -40,7 +41,7 @@ export function LoadPromise<D, P>(props: LoadPromiseProps<D, P>) {
     return Progress ? <Progress/> : null;
   }
   const Success = props.success;
-  const params: { data: D } & P = Object.assign({}, props, {data: loaded});
+  const params: { data: D } & P = Object.assign({}, props.additional, {data: loaded});
   return <Success {...params}/>
 }
 
@@ -60,7 +61,7 @@ export function withLoadedPromiseAndParams<D, P>(loader: () => Promise<D>,
                                                  progress?: RComponent<any>) {
   const params: LoadPromiseProps<D, P> = {
     loader: loader, success: component, failure: failure, progress: progress,
-    ...additonalParams
+    additional: additonalParams
   };
-  return () => <LoadPromise {...params} data={undefined}/>;
+  return () => <LoadPromise {...params} />;
 }
