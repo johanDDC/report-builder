@@ -1,16 +1,16 @@
+import {MutableRefObject} from "react";
+
 export class Messages {
-    private static block: HTMLElement = null;
+    private static blockRef: MutableRefObject<HTMLElement> = null;
 
     static add(message: string): void {
         let childBlock = document.createElement("div");
         childBlock.innerText = message;
-        this.block.appendChild(childBlock);
+        this.blockRef.current.appendChild(childBlock);
     }
 
-    static bindBlock(blockId: string): void {
-        let block = document.getElementById(blockId);
-        if (block != null) {
-            this.block = block;
-        }
+    static bindBlock(blockRef: MutableRefObject<HTMLElement>): void {
+        // console.log(blockRef, blockRef.current);
+        this.blockRef = blockRef;
     }
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useRef} from "react";
 
 import {withLoadedPromiseAndParams} from "./utils";
 import * as API from "./api";
@@ -11,10 +11,11 @@ function codeExecuter(code: string) {
 }
 
 function LoadedHelloWorld(props: { data: API.State }) {
-    Messages.bindBlock("root");
+    const mainBlock = useRef(null);
+    Messages.bindBlock(mainBlock);
     let executeFunc = codeExecuter("messages.add('Hello'); messages.add('World!');");
 
-    return <div>
+    return <div ref={mainBlock}>
         <h1>Message: {props.data.message}</h1>
         <h1>Time: {props.data.time.toString()}</h1>
         <RunButton codeExecuter={executeFunc} context={Messages}/>
