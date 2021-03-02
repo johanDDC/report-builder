@@ -1,6 +1,12 @@
 import React, {useRef} from 'react';
 // @ts-ignore
-import Editor from "@monaco-editor/react";
+import Editor, {Monaco} from "@monaco-editor/react";
+
+const messagesSource = [
+    "const messages = {",
+    "   add: (message : string) => {}",
+    "}"
+].join('\n');
 
 function BasicEditor() {
     const editorRef = useRef(null);
@@ -15,8 +21,9 @@ function BasicEditor() {
             height="200px"
             defaultLanguage="typescript"
             defaultValue={code}
-            onMount={(editor) => {
+            onMount={(editor, monaco) => {
                 editorRef.current = editor;
+                monaco.languages.typescript.typescriptDefaults.addExtraLib(messagesSource);
             }}
         />
         <button onClick={() => showCode()}>Print code</button>
