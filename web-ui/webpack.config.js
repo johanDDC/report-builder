@@ -57,7 +57,11 @@ module.exports = {
                         }
                     }
                 ]
-            }
+            },
+            {
+                test: /\.ttf$/,
+                use: ['file-loader']
+            },
         ]
     },
     resolve: {
