@@ -4,6 +4,8 @@ import HelloWorld from './HelloWorld';
 import BasicExecutor from "./basicExecution";
 import BasicEditor from "./basic-editor";
 
+import "./alm-crm.css"
+
 document.addEventListener('DOMContentLoaded', () => {
     let content = <>
         <HelloWorld/>
