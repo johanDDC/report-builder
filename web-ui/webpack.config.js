@@ -21,21 +21,23 @@ module.exports = {
         'lodash': '_',
         'redux': 'Redux',
         'react-redux': 'ReactRedux',
-        '@reduxjs/toolkit': 'RTK'
+        '@reduxjs/toolkit': 'RTK',
+        '@monaco-editor/loader': 'monaco_loader',
     },
     module: {
         rules: [
             {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader'],
+            },
+            {
+                test: /\.ttf$/,
+                use: ['file-loader']
+            },
+            {
                 test: /\.(ts|tsx)?$/,
                 loader: 'ts-loader',
                 exclude: /node_modules/
-            },
-            {
-                test: /\.css$/,
-                use: [
-                    'style-loader',
-                    'css-loader'
-                ]
             },
             {
                 test: /\.css-resource$/,
@@ -57,10 +59,6 @@ module.exports = {
                         }
                     }
                 ]
-            },
-            {
-                test: /\.ttf$/,
-                use: ['file-loader']
             },
         ]
     },
