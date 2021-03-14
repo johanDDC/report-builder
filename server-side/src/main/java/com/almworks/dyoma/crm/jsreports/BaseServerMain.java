@@ -17,6 +17,7 @@ public abstract class BaseServerMain {
   private static final URI BASE_URI = URI.create("http://" + NetworkListener.DEFAULT_NETWORK_HOST + ":8080/");
   private URI myBaseUri = BASE_URI;
   private String myRestPath = "/rest/api/v1/";
+  private ServerController myController;
 
   public BaseServerMain setBaseUri(URI baseUri) {
     myBaseUri = baseUri;
@@ -39,18 +40,22 @@ public abstract class BaseServerMain {
     return runServer();
   }
 
+  protected ServerController getController() {
+    return myController;
+  }
+
   private int runServer() throws InterruptedException {
     URI restBaseUrl = myBaseUri.resolve(myRestPath);
     ResourceConfig rc = new ResourceConfig();
     rc.register(GsonJerseyProvider.class);
 //    rc.register(MultiPartFeature.class);
-    ServerController controller = new ServerController();
-    rc.register(controller, ServerController.class);
+    myController = new ServerController();
+    rc.register(myController, ServerController.class);
     registerComponents(rc);
     HttpServer server = GrizzlyHttpServerFactory.createHttpServer(restBaseUrl, rc);
     server.getServerConfiguration().addHttpHandler(createStaticHandler(), "/");
     System.out.println("Server started at: http://localhost:" + myBaseUri.getPort() + "/");
-    int exitCode = controller.waitForShutdown();
+    int exitCode = myController.waitForShutdown();
     System.out.println("Shutting down...");
     ServerShutdown.shutdown(server);
     return exitCode;

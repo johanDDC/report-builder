@@ -15,3 +15,7 @@ export function requestState(): Promise<State> {
             };
         });
 }
+
+export function shutdownServer() {
+  return axios.post('/rest/api/v1/server/shutdown');
+}
