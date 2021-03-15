@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -22,8 +23,8 @@ public class MongoConsole {
     /**
      * Resource folder requires workong directory in server-side
      */
-    private static String resourceFolder = "src/main/resources/";
-    private static JsonDeserializer<Date> dateDeserializer = new JsonDeserializer<Date>() {
+    private static final String resourceFolder = "src/main/resources/";
+    private static final JsonDeserializer<Date> dateDeserializer = new JsonDeserializer<Date>() {
         @Override
         public Date deserialize(JsonElement json, Type typeOfT,
                                 JsonDeserializationContext context) throws JsonParseException {
@@ -35,7 +36,7 @@ public class MongoConsole {
             }
         }
     };
-    private static JsonDeserializer<Duration> durationDeserializer = new JsonDeserializer<Duration>() {
+    private static final JsonDeserializer<Duration> durationDeserializer = new JsonDeserializer<Duration>() {
         @Override
         public Duration deserialize(JsonElement jsonElement, Type type,
                                     JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
@@ -49,25 +50,24 @@ public class MongoConsole {
             return res;
         }
     };
-    private static Gson databaseParser = new GsonBuilder()
+    private static final Gson databaseParser = new GsonBuilder()
             .registerTypeAdapter(Date.class, dateDeserializer)
             .registerTypeAdapter(Duration.class, durationDeserializer)
             .create();
 
-    private static String MongoURL = "mongodb://127.0.0.1:27017";
+    private static final String MongoURL = "mongodb://127.0.0.1:27017";
 
     static private NetflixEntry readEntry() throws IOException {
-        Reader reader = Files.newBufferedReader(Paths.get(resourceFolder + "recordExample.json"));
+        Reader reader = Files.newBufferedReader(Paths.get(resourceFolder + "com/almworks/dyoma/crm/mongoDB/recordExample.json"));
         String fileContent = JsonParser.parseReader(reader).getAsString();
         return databaseParser.fromJson(fileContent
                 , NetflixEntry[].class)[0];
     }
 
     static private NetflixEntry[] readEntries() throws IOException {
-        Reader reader = Files.newBufferedReader(Paths.get(resourceFolder + "DB.json"));
-        String fileContent = JsonParser.parseReader(reader).getAsString();
-        return databaseParser.fromJson(fileContent
-                , NetflixEntry[].class);
+        try (Reader reader = new InputStreamReader(MongoConsole.class.getResourceAsStream("DB.json"))) {
+            return databaseParser.fromJson(reader, NetflixEntry[].class);
+        }
     }
 
     public static void main(String[] args) throws ParseException, IOException {
