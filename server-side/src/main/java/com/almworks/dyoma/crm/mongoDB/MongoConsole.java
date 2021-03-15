@@ -15,9 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MongoConsole {
     /**
@@ -60,8 +61,7 @@ public class MongoConsole {
     static private NetflixEntry readEntry() throws IOException {
         Reader reader = Files.newBufferedReader(Paths.get(resourceFolder + "com/almworks/dyoma/crm/mongoDB/recordExample.json"));
         String fileContent = JsonParser.parseReader(reader).getAsString();
-        return databaseParser.fromJson(fileContent
-                , NetflixEntry[].class)[0];
+        return databaseParser.fromJson(fileContent, NetflixEntry[].class)[0];
     }
 
     static private NetflixEntry[] readEntries() throws IOException {
@@ -75,10 +75,8 @@ public class MongoConsole {
         MongoDatabase database = mongoClient.getDatabase("netflix");
         MongoCollection<Document> collection = database.getCollection("testCollection");
         NetflixEntry[] entries = readEntries();
-        List<Document> documents = new ArrayList<>();
-        for (NetflixEntry entry : entries) {
-            documents.add(entry.getDocument());
-        }
+        List<Document> documents = Arrays.stream(entries).map(NetflixEntry::getDocument).collect(Collectors.toList());
+        collection.drop();
         collection.insertMany(documents);
     }
 
