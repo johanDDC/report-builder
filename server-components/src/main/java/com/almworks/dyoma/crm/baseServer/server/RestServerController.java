@@ -1,4 +1,4 @@
-package com.almworks.dyoma.crm.jsreports.server;
+package com.almworks.dyoma.crm.baseServer.server;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;

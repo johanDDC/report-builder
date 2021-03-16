@@ -1,4 +1,4 @@
-package com.almworks.dyoma.crm.jsreports.server;
+package com.almworks.dyoma.crm.baseServer.server;
 
 import org.glassfish.jersey.spi.Contract;
 

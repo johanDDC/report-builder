@@ -1,7 +1,10 @@
 package com.almworks.dyoma.crm.jsreports;
 
-import com.almworks.dyoma.crm.jsreports.server.DummyServerController;
-import com.almworks.dyoma.crm.jsreports.server.RestServerController;
+import com.almworks.dyoma.crm.baseServer.BaseServerMain;
+import com.almworks.dyoma.crm.baseServer.HelloWorldServerComponent;
+import com.almworks.dyoma.crm.baseServer.StaticHandler;
+import com.almworks.dyoma.crm.baseServer.server.DummyServerController;
+import com.almworks.dyoma.crm.baseServer.server.RestServerController;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jetbrains.annotations.NotNull;
