@@ -1,4 +1,4 @@
-package com.almworks.dyoma.crm.baseServer;
+package com.almworks.dyoma.crm.jsreports.samples;
 
 
 import com.google.gson.JsonObject;
