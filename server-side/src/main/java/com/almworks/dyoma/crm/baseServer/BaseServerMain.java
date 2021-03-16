@@ -1,4 +1,4 @@
-package com.almworks.dyoma.crm.jsreports;
+package com.almworks.dyoma.crm.baseServer;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
