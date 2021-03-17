@@ -12,20 +12,32 @@ import javax.ws.rs.core.Response;
 @Consumes({MediaType.APPLICATION_JSON, "text/json"})
 @Produces({MediaType.APPLICATION_JSON, "text/json"})
 public class RestSampleQuery {
-//    private final MongoQueryComponent myComponent;
+    private final MongoQueryComponent myComponent;
 
-//    @Inject
-//    public RestSampleQuery(MongoQueryComponent component) {
-//        myComponent = component;
-//    }
+    @Inject
+    public RestSampleQuery(MongoQueryComponent component) {
+        myComponent = component;
+    }
 
     @Path("/{collectionName}/query")
     @GET
-    public Response querryCollection(@PathParam("collectionName") String collectionName,
-                                     @QueryParam("query") String queryJson) {
-//            myComponent.queryCollection(collectionName, JsonParser.parseString(queryJson));
+    public Response querryCollectionGET(@PathParam("collectionName") String collectionName,
+                                        @QueryParam("query") String queryJson) {
         try {
-            JsonArray payload = MongoQueryComponent.queryCollection(collectionName, queryJson);
+            String payload = myComponent.queryCollection(collectionName, queryJson);
+            return Response.ok().entity(payload).build();
+        } catch (JsonParseException jsonParseException) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+    }
+
+    @Path("/{collectionName}/query")
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON})
+    public Response querryCollectionPOST(@PathParam("collectionName") String collectionName, String json) {
+        String queryJson = ((JsonObject) JsonParser.parseString(json)).get("query").toString();
+        try {
+            String payload = myComponent.queryCollection(collectionName, queryJson);
             return Response.ok().entity(payload).build();
         } catch (JsonParseException jsonParseException) {
             return Response.status(Response.Status.BAD_REQUEST).build();
