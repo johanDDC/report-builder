@@ -23,6 +23,9 @@ public class RestSampleQuery {
     @GET
     public Response querryCollectionGET(@PathParam("collectionName") String collectionName,
                                         @QueryParam("query") String queryJson) {
+        if (queryJson.equals("")) {
+            queryJson = "{}";
+        }
         try {
             String payload = myComponent.queryCollection(collectionName, queryJson);
             return Response.ok().entity(payload).build();
