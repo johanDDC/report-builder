@@ -11,7 +11,9 @@ import org.jetbrains.annotations.NotNull;
 public class Server extends BaseServerMain {
     @Override
     protected void registerComponents(ResourceConfig rc) {
-        rc.registerClasses(HelloWorldServerComponent.class, RestServerController.class);
+        rc.registerClasses(HelloWorldServerComponent.class, RestServerController.class, RestSampleQuery.class);
+        MongoQueryComponent queryComponent = new MongoQueryComponent("mongodb://127.0.0.1:27017", "netflix");
+        rc.register(queryComponent, MongoQueryComponent.class);
     }
 
     @Override
