@@ -30,8 +30,7 @@ public class MongoQueryComponent {
     public String queryCollection(String collectionName, String query) throws JsonParseException {
         MongoCollection<Document> collection = MongoDB.getCollection(collectionName);
         Document queryDocument = Document.parse(query);
-        List<Document> documents = new ArrayList<>();
-        collection.find(queryDocument).forEach(documents::add);
+        List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
         return new Gson().toJson(documents);
     }
 }
