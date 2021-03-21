@@ -15,3 +15,13 @@ export function requestState(): Promise<State> {
             };
         });
 }
+
+export function shutdownServer() {
+    return axios.post('/rest/api/v1/server/shutdown');
+}
+
+export function simpleQuery() {
+    return axios.post('/rest/api/v1/db/testCollection/query', {
+        query: {release_year: {$gt: 2020}}
+    });
+}
