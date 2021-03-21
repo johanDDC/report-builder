@@ -19,7 +19,7 @@ export default function WorkerExecuter(props: { editor: { getValue: () => string
     const [resulExecution, setResultExecution] = useState([]);
     let worker;
     if (window.Worker) {
-        worker = new Worker("worker.js");
+        worker = new Worker("js/execution.worker.js");
     } else {
         alert("Problem with worker initialization");
     }
