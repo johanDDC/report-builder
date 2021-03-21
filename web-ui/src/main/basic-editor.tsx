@@ -12,7 +12,7 @@ const messagesSource = [
 function BasicEditor() {
     const editorContainer = useRef(null);
     const [editor, setEditor] = useState(null);
-    const code = "function a(){\n\tconsole.log(123);\n}";
+    const code = "function a(){\n\tconsole.log(123);\n}\n\na(); ";
 
     const showCode = () => {
         alert(editor.getValue());

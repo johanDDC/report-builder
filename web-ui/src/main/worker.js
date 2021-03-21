@@ -1,5 +1,5 @@
 onmessage = event => {
-    let execution = new Function(event.data[0]) // FIXME
+    let execution = new Function(event.data);
     let result = execution();
     postMessage(result);
 }
