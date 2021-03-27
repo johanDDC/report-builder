@@ -25,3 +25,18 @@ export function simpleQuery() {
         query: {release_year: {$gt: 2020}}
     });
 }
+
+export class ExecutionWorker {
+    private static worker;
+
+    public static getInstance() {
+        if (!ExecutionWorker.worker) {
+            if (window.Worker) {
+                ExecutionWorker.worker = new Worker("js/worker.execution.js");
+            } else {
+                ExecutionWorker.worker = null;
+            }
+        }
+        return ExecutionWorker.worker;
+    }
+}
