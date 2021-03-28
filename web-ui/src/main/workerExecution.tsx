@@ -1,4 +1,15 @@
-import {getWorker} from "./api";
+let worker;
+
+export function getWorker() {
+    if (!worker) {
+        if (window.Worker) {
+            worker = new Worker("js/worker.execution.js");
+        } else {
+            worker = null;
+        }
+    }
+    return worker;
+}
 
 export default function runCode(code: string): Promise<MessageEvent> {
     let worker = getWorker();
