@@ -25,3 +25,16 @@ export function simpleQuery() {
         query: {release_year: {$gt: 2020}}
     });
 }
+
+let worker;
+
+export function getWorker() {
+    if (!worker) {
+        if (window.Worker) {
+            worker = new Worker("js/worker.execution.js");
+        } else {
+            worker = null;
+        }
+    }
+    return worker;
+}

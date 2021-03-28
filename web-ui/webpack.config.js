@@ -3,7 +3,8 @@ const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        "server": path.join(__dirname, 'src', 'main', 'index.tsx')
+        "server": path.join(__dirname, 'src', 'main', 'index.tsx'),
+        "worker.execution": path.join(__dirname, 'src', 'main', 'worker.js')
     },
     output: {
         path: path.join(__dirname, 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
