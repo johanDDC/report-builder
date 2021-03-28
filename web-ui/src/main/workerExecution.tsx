@@ -37,6 +37,13 @@ function drawTable(setter: React.Dispatch<React.SetStateAction<JSX.Element>>, da
 
     setter(
         <table>
+            <thead>
+            <tr>
+                {
+                    Object.keys(data[0]).map((col, key) => col != "_id" ? <th key={key}>{col}</th> : null)
+                }
+            </tr>
+            </thead>
             <tbody>
             {data.map((obj, key) => {
                 let row = [];
