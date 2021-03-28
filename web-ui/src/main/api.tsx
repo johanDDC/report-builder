@@ -25,19 +25,3 @@ export function simpleQuery() {
         query: {release_year: {$gt: 2020}}
     });
 }
-
-export class ReportAPI {
-    constructor() {
-    }
-
-    query(query: {}): {} {
-        console.log("api.query", query);
-        return {};
-    }
-
-    table(data: Array<JSON>): void {
-        console.log("api.table", data);
-        // @ts-ignore
-        postMessage(data);
-    }
-}
