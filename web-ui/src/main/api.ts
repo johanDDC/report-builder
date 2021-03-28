@@ -26,17 +26,15 @@ export function simpleQuery() {
     });
 }
 
-export class ExecutionWorker {
-    private static worker;
+let worker;
 
-    public static getInstance() {
-        if (!ExecutionWorker.worker) {
-            if (window.Worker) {
-                ExecutionWorker.worker = new Worker("js/worker.execution.js");
-            } else {
-                ExecutionWorker.worker = null;
-            }
+export function getWorker() {
+    if (!worker) {
+        if (window.Worker) {
+            worker = new Worker("js/worker.execution.js");
+        } else {
+            worker = null;
         }
-        return ExecutionWorker.worker;
     }
+    return worker;
 }

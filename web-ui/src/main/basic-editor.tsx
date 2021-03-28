@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 // @ts-ignore
 import loader from '@monaco-editor/loader';
-import WorkerExecuter from "./workerExecution";
+import runCode from "./workerExecution";
 
 const messagesSource = [
     "const messages = {",
@@ -32,8 +32,10 @@ function BasicEditor() {
 
     return <>
         <div className="basic-editor" ref={editorContainer}></div>
-        <button onClick={() => showCode()}>Print code</button>
-        <WorkerExecuter editor={editor}/>
+        <button onClick={showCode}>Print code</button>
+        <button onClick={() => runCode(editor.getValue())}>
+            Run in worker
+        </button>
     </>;
 }
 
