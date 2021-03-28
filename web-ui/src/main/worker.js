@@ -1,5 +1,7 @@
+import {ReportAPI} from "./reportAPI";
+
 onmessage = event => {
-    let execution = new Function(event.data);
-    let result = execution();
-    postMessage(result);
+    let execution = new Function("api", event.data);
+    let api = new ReportAPI();
+    execution(api);
 }
