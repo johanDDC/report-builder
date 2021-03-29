@@ -1,7 +1,7 @@
 import React from "react";
 
-import {withLoadedPromiseAndParams} from "./utils";
-import * as API from "./api";
+import {withLoadedPromiseAndParams} from "../editor/utils";
+import * as API from "../editor/api";
 
 function LoadedHelloWorld(props: { data: API.State }) {
     return <div>
