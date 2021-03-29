@@ -15,7 +15,7 @@ export class ReportAPI {
             console.log("api.query", query, request.responseText);
             return JSON.parse(request.responseText);
         } else {
-            return {};
+            return {};  // TODO errors
         }
     }
 
