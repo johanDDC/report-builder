@@ -31,6 +31,6 @@ public class MongoQueryComponent {
         MongoCollection<Document> collection = MongoDB.getCollection(collectionName);
         Document queryDocument = Document.parse(query);
         List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
-        return new Gson().toJson(documents);
+        return new GsonBuilder().serializeNulls().create().toJson(documents);
     }
 }

@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import * as API from "./api";
+import * as API from "../editor/api";
 
 function ServerController() {
   const [running, setRunning] = useState(true);

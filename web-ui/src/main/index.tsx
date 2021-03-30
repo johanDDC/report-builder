@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import HelloWorld from './HelloWorld';
-import BasicExecutor from "./basicExecution";
-import BasicEditor from "./basic-editor";
-import ServerController from "./serverController";
+import HelloWorld from './samples/HelloWorld';
+import BasicExecutor from "./samples/basicExecution";
+import BasicEditor from "./editor/basic-editor";
+import ServerController from "./samples/serverController";
 
 document.addEventListener('DOMContentLoaded', () => {
     let content = <>
