@@ -8,7 +8,6 @@ export class ReportAPI {
 
     query(query: {}) {
         let request = new XMLHttpRequest();
-        // @ts-ignore
         request.open("POST", ReportAPI.url, false);
         request.setRequestHeader("Content-Type", "application/json");
         request.send(JSON.stringify({"query": query}));
