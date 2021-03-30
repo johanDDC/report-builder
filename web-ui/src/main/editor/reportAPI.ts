@@ -1,6 +1,6 @@
 export class ReportAPI {
 
-    private static url = new URL(location.protocol + location.host + "/rest/api/v1/db/testCollection/query/");
+    private static url =  "/rest/api/v1/db/testCollection/query/";
 
     constructor() {
         console.log("costructed");
