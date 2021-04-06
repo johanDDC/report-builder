@@ -9,23 +9,25 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function Table(props: { data: Array<JSON> }) {
-    if (props.data.length == 0) {
+function Table(props: { data: { columns: Array<string>, query: Array<JSON> } }) {
+    let columns = props.data.columns;
+    let query = props.data.query;
+    if (query.length == 0) {
         return null;
     }
     return <table className="tableContainer">
         <thead>
         <tr>
             {
-                Object.keys(props.data[0]).map((col, key) => col != "_id" ? <th key={key}>{col}</th> : null)
+                columns.map((col, key) => col != "_id" ? <th key={key}>{col}</th> : null)
             }
         </tr>
         </thead>
         <tbody>
-        {props.data.map((obj, key) => {
+        {query.map((obj, key) => {
             let row = [];
             let id = 0;
-            for (let field of Object.keys(obj)) {
+            for (let field of columns) {
                 if (field !== "_id") {
                     let elem;
                     if (obj[field] instanceof Object) {
@@ -45,7 +47,7 @@ function Table(props: { data: Array<JSON> }) {
 
 function BasicEditor() {
     const editorContainer = useRef(null);
-    const [data, setData] = useState([]);
+    const [data, setData] = useState({columns: [], query: []});
     const [editor, setEditor] = useState(null);
     const code = "let result = api.query({});\n" +
         "api.table(result);";
