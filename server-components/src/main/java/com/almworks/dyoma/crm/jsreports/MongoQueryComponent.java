@@ -36,9 +36,9 @@ public class MongoQueryComponent {
         List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
         JsonObject out = new JsonObject();
         List<String> columns = new ArrayList<>(documents.get(0).keySet());
+        columns.remove("_id");
         out.add("columns", gson.toJsonTree(columns));
         out.add("query", gson.toJsonTree(documents));
-        System.out.println(gson.toJsonTree(documents.get(0)));
         return gson.toJson(out);
     }
 }

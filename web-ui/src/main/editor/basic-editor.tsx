@@ -19,7 +19,7 @@ function Table(props: { data: { columns: Array<string>, query: Array<JSON> } }) 
         <thead>
         <tr>
             {
-                columns.map((col, key) => col != "_id" ? <th key={key}>{col}</th> : null)
+                columns.map((col, key) => <th key={key}>{col}</th>)
             }
         </tr>
         </thead>
@@ -28,15 +28,13 @@ function Table(props: { data: { columns: Array<string>, query: Array<JSON> } }) 
             let row = [];
             let id = 0;
             for (let field of columns) {
-                if (field !== "_id") {
-                    let elem;
-                    if (obj[field] instanceof Object) {
-                        elem = JSON.stringify(obj[field]);
-                    } else {
-                        elem = obj[field];
-                    }
-                    row.push(<td key={id++}>{elem}</td>);
+                let elem;
+                if (obj[field] instanceof Object) {
+                    elem = JSON.stringify(obj[field]);
+                } else {
+                    elem = obj[field];
                 }
+                row.push(<td key={id++}>{elem}</td>);
             }
             return <tr key={key}>{row}</tr>
         })}
