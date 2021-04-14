@@ -32,12 +32,12 @@ public class MongoQueryComponent {
         Document queryDocument = Document.parse(query);
         List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
         StringBuilder result = new StringBuilder("[");
-        documents.stream().map(Document::toJson).forEach(doc -> result.append(doc).append(","));
-        if (result.length() > 1) {
-            result.setCharAt(result.length() - 1, ']');
-        } else {
-            result.append(']');
+        for (int i = 0; i < documents.size(); i++) {
+            if (i > 0) {
+                result.append(',');
+            }
+            result.append(documents.get(i).toJson());
         }
-        return result.toString();
+        return result.append(']').toString();
     }
 }
