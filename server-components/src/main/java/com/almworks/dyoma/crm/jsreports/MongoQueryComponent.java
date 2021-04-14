@@ -31,6 +31,13 @@ public class MongoQueryComponent {
         MongoCollection<Document> collection = MongoDB.getCollection(collectionName);
         Document queryDocument = Document.parse(query);
         List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
-        return new GsonBuilder().serializeNulls().create().toJson(documents);
+        StringBuilder result = new StringBuilder("[");
+        documents.stream().map(Document::toJson).forEach(doc -> result.append(doc).append(","));
+        if (result.length() > 1) {
+            result.setCharAt(result.length() - 1, ']');
+        } else {
+            result.append(']');
+        }
+        return result.toString();
     }
 }
