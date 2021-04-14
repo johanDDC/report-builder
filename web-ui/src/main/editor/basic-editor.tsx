@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 // @ts-ignore
 import loader from '@monaco-editor/loader';
 import runCode from "./workerExecution";
-import {EMPTY_CONFIG, TableConfig} from "./reportAPI";
+import {TableConfig} from "./reportAPI";
 
 const messagesSource = [
     "const messages = {",
@@ -10,22 +10,25 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function Table(props: { message: { data: Array<any>, config: TableConfig } }) {
-    let columns = props.message.config.columns;
-    let rows = props.message.config.rowsToView
-    if (props.message.data.length == 0 || columns.length == 0) {
+function Table(props: { message: any[], config?: TableConfig }) {
+    let columns, rows;
+    if (props.config == undefined) {
+        columns = [];
+        rows = 5;
+    } else {
+        columns = props.config.columns;
+        rows = props.config.rowsToView
+    }
+    if (props.message.length == 0) {
         return null;
     }
+    if (columns.length == 0) {
+        columns = Object.keys(props.message[0]);
+        columns = columns.filter(e => e != "_id");
+    }
     return <table className="tableContainer">
-        <thead>
-        <tr>
-            {
-                columns.map((colName, key) => <th key={key}>{colName}</th>)
-            }
-        </tr>
-        </thead>
         <tbody>
-        {props.message.data.map((obj, key) => {
+        {props.message.map((obj, key) => {
             if (key > rows) {
                 return null;
             }
@@ -49,14 +52,10 @@ function Table(props: { message: { data: Array<any>, config: TableConfig } }) {
 
 function BasicEditor() {
     const editorContainer = useRef(null);
-    const [data, setData] = useState({data: [], config: EMPTY_CONFIG});
+    const [data, setData] = useState([]);
+    const [tableConfig, setTableConfig] = useState(undefined);
     const [editor, setEditor] = useState(null);
-    const code = "let config = {\n" +
-        "\tcolumns: [\"show_id\", \"type\", \"title\", \"director\", \"cast\", \"country\", \"duration\", \"description\"],\n" +
-        "\trowsToView : 10,\n}\n\n" +
-        "let result = api.query({});\n" +
-        "api.configure(config);\n" +
-        "api.table(result);";
+    const code = "api.table(api.query({}));";
 
     const showCode = () => {
         alert(editor.getValue());
@@ -78,10 +77,13 @@ function BasicEditor() {
         <div className="basic-editor" ref={editorContainer}/>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => runCode(editor.getValue()).then(message => setData(message.data))}>
+            onClick={() => runCode(editor.getValue()).then(message => {
+                setData(message.data.data);
+                setTableConfig(message.data.config);
+            })}>
             Run in worker
         </button>
-        <Table message={data}/>
+        <Table message={data} config={tableConfig}/>
     </>;
 }
 
