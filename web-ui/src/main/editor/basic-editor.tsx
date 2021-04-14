@@ -10,6 +10,43 @@ const messagesSource = [
     "}"
 ].join('\n');
 
+function downloadCSV(message: any[], config?: TableConfig) {
+    let rows, columns;
+    if (config == undefined) {
+        columns = [];
+        rows = 5;
+    } else {
+        columns =config.columns;
+        rows = config.rowsToView
+    }
+    if (columns.length == 0) {
+        columns = Object.keys(message[0]);
+        columns = columns.filter(e => e != "_id");
+    }
+    let query = message;
+    let csv = columns.join(',') + "\r\n";
+    for (let record of query) {
+        if (rows <= 0) {
+            break;
+        }
+        let row = "";
+        for (let column of columns) {
+            if (record[column] instanceof Array) {
+                row += JSON.stringify(record[column].join(',')) + ',';
+            } else {
+                row += JSON.stringify(record[column]) + ',';
+            }
+        }
+        csv += row + "\r\n";
+        rows--;
+    }
+    var downloader = document.createElement('a');
+    downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    downloader.target = '_blank';
+    downloader.download = 'report.csv';
+    downloader.click();
+}
+
 function Table(props: { message: any[], config?: TableConfig }) {
     let columns, rows;
     if (props.config == undefined) {
@@ -82,6 +119,10 @@ function BasicEditor() {
                 setTableConfig(message.data.config);
             })}>
             Run in worker
+        </button>
+        <button
+            onClick={() => downloadCSV(data)}>
+            Download CSV
         </button>
         <Table message={data} config={tableConfig}/>
     </>;
