@@ -8,7 +8,6 @@ export class ReportAPI {
     private config: TableConfig;
 
     constructor() {
-        console.log("costructed");
         this.config = {
             columns: [],
             rowsToView: 5,
@@ -21,7 +20,6 @@ export class ReportAPI {
         request.setRequestHeader("Content-Type", "application/json");
         request.send(JSON.stringify({"query": query}));
         if (request.readyState == 4 && request.status == 200) {
-            console.log("api.query", query, request.responseText);
             return JSON.parse(request.responseText);
         } else {
             return {};  // TODO errors
@@ -30,7 +28,6 @@ export class ReportAPI {
 
     table(data: Array<JSON>, config?: TableConfig): void {
         this.configure(config);
-        console.log("api.table", data);
         // @ts-ignore
         postMessage({
             data: data,
