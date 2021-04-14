@@ -3,18 +3,16 @@ export interface TableConfig {
     rowsToView?: number,
 }
 
-export const EMPTY_CONFIG : TableConfig = {
-    columns: [],
-    rowsToView: 0,
-}
-
 export class ReportAPI {
     private static url = "/rest/api/v1/db/testCollection/query/";
     private config: TableConfig;
 
     constructor() {
         console.log("costructed");
-        this.config = EMPTY_CONFIG;
+        this.config = {
+            columns: [],
+            rowsToView: 5,
+        };
     }
 
     query(query: {}) {
@@ -30,7 +28,8 @@ export class ReportAPI {
         }
     }
 
-    table(data: Array<JSON>): void {
+    table(data: Array<JSON>, config?: TableConfig): void {
+        this.configure(config);
         console.log("api.table", data);
         // @ts-ignore
         postMessage({
@@ -40,11 +39,10 @@ export class ReportAPI {
     }
 
     configure(config: TableConfig) {
-        if (config["columns"] != undefined) {
-            this.config["columns"] = config["columns"];
-        }
-        if (config["rowsToView"] != undefined) {
-            this.config["rowsToView"] = config["rowsToView"];
+        if (config != undefined) {
+            for (let field of Object.keys(config)) {
+                this.config[field] = config[field];
+            }
         }
     }
 }
