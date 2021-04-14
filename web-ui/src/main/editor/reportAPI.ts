@@ -1,9 +1,17 @@
-export class ReportAPI {
+export interface TableConfig {
+    columns?: Array<string>,
+    rowsToView?: number,
+}
 
-    private static url =  "/rest/api/v1/db/testCollection/query/";
+export class ReportAPI {
+    private static url = "/rest/api/v1/db/testCollection/query/";
+    private config: TableConfig;
 
     constructor() {
-        console.log("costructed");
+        this.config = {
+            columns: [],
+            rowsToView: 5,
+        };
     }
 
     query(query: {}) {
@@ -12,16 +20,26 @@ export class ReportAPI {
         request.setRequestHeader("Content-Type", "application/json");
         request.send(JSON.stringify({"query": query}));
         if (request.readyState == 4 && request.status == 200) {
-            console.log("api.query", query, request.responseText);
             return JSON.parse(request.responseText);
         } else {
             return {};  // TODO errors
         }
     }
 
-    table(data: Array<JSON>): void {
-        console.log("api.table", data);
+    table(data: Array<JSON>, config?: TableConfig): void {
+        this.configure(config);
         // @ts-ignore
-        postMessage(data);
+        postMessage({
+            data: data,
+            config: this.config,
+        });
+    }
+
+    configure(config: TableConfig) {
+        if (config != undefined) {
+            for (let field of Object.keys(config)) {
+                this.config[field] = config[field];
+            }
+        }
     }
 }
