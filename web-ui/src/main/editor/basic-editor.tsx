@@ -105,7 +105,7 @@ function MaxRowsTextarea() {
 }
 
 
-function BasicEditor() {
+export function BasicEditor() {
     const editorContainer = useRef(null);
     const [data, setData] = useState([]);
     const [headColumns, setHeadColumns] = useState(undefined);
@@ -147,5 +147,3 @@ function BasicEditor() {
         <Table rows={data} headColumns={headColumns}/>
     </>;
 }
-
-export default BasicEditor;
