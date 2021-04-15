@@ -9,32 +9,78 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function Table(props: { data: Array<JSON> }) {
-    if (props.data.length == 0) {
+function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+    let csv = "";
+    for (let headCol of columns) {
+        csv += headCol.header + ',';
+    }
+    csv += "\r\n";
+    for (let row of rows) {
+        for (let column of columns) {
+            csv += column.renderer(row[column.header]) + ',';
+        }
+        csv += "\r\n";
+    }
+    return csv;
+}
+
+function downloadCSV(rows: any[], columns?: string[]) {
+    if (columns == undefined) {
+        columns = Object.keys(rows[0]).filter(e => e != "_id");
+    }
+    console.log(formColumns(columns));
+    let csv = toCSV(rows, formColumns(columns));
+    console.log(csv.slice(0, 3000));
+    var downloader = document.createElement('a');
+    downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    downloader.target = '_blank';
+    downloader.download = 'report.csv';
+    downloader.click();
+
+    function formColumns<T>(header: string[]): { header: string, renderer: (t: T) => string }[] {
+        let columns = [];
+        for (let col of header) {
+            columns.push({
+                header: col,
+                renderer: (val: T) => {
+                    if (val instanceof Array) {
+                        return JSON.stringify(val.join(','));
+                    } else {
+                        return JSON.stringify(val);
+                    }
+                },
+            })
+        }
+        return columns;
+    }
+}
+
+function Table(props: { rows: any[], headColumns?: string[] }) {
+    if (props.rows.length == 0) {
         return null;
     }
+    let tableRows = localStorage.getItem("maxRows") == null
+        ? 5
+        : JSON.parse(localStorage.getItem("maxRows"));
+    let columns = (props.headColumns != undefined)
+        ? props.headColumns
+        : Object.keys(props.rows[0]).filter(e => e != "_id");
     return <table className="tableContainer">
-        <thead>
-        <tr>
-            {
-                Object.keys(props.data[0]).map((col, key) => col != "_id" ? <th key={key}>{col}</th> : null)
-            }
-        </tr>
-        </thead>
         <tbody>
-        {props.data.map((obj, key) => {
+        {props.rows.map((obj, key) => {
+            if (key >= tableRows) {
+                return null;
+            }
             let row = [];
-            let id = 0;
-            for (let field of Object.keys(obj)) {
-                if (field !== "_id") {
-                    let elem;
-                    if (obj[field] instanceof Object) {
-                        elem = JSON.stringify(obj[field]);
-                    } else {
-                        elem = obj[field];
-                    }
-                    row.push(<td key={id++}>{elem}</td>);
+            let rowId = 0;
+            for (let field of columns) {
+                let elem;
+                if (obj[field] instanceof Object) {     // obj[field] == undefined ?
+                    elem = JSON.stringify(obj[field]);
+                } else {
+                    elem = obj[field];
                 }
+                row.push(<td key={rowId++}>{elem}</td>);
             }
             return <tr key={key}>{row}</tr>
         })}
@@ -42,13 +88,29 @@ function Table(props: { data: Array<JSON> }) {
     </table>;
 }
 
+function MaxRowsTextarea() {
+    const [maxRows, setMaxRows] = useState(localStorage.getItem("maxRows") != null
+        ? JSON.parse(localStorage.getItem("maxRows"))
+        : 5);
+    if (localStorage.getItem("maxRows") == null) {
+        localStorage.setItem("maxRows", JSON.stringify(5));
+    }
+
+
+    return <input maxLength={3} type="number" min={1} max={100} value={maxRows}
+                  onChange={(val) => {
+                      setMaxRows(val.target.value);
+                      localStorage.setItem("maxRows", JSON.stringify(val.target.value))
+                  }}/>;
+}
+
 
 export function BasicEditor() {
     const editorContainer = useRef(null);
     const [data, setData] = useState([]);
+    const [headColumns, setHeadColumns] = useState(undefined);
     const [editor, setEditor] = useState(null);
-    const code = "let result = api.query({});\n" +
-        "api.table(result);";
+    const code = "api.table(api.query({}));";
 
     const showCode = () => {
         alert(editor.getValue());
@@ -70,9 +132,18 @@ export function BasicEditor() {
         <div className="basic-editor" ref={editorContainer}/>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => runCode(editor.getValue()).then(message => setData(message.data))}>
+            onClick={() => runCode(editor.getValue()).then(message => {
+                setData(message.data.data);
+                setHeadColumns(message.data.headColumns);
+            })}>
             Run in worker
         </button>
-        <Table data={data}/>
+        <button
+            onClick={() => downloadCSV(data)}
+            disabled={data.length == 0}>
+            Download CSV
+        </button>
+        <MaxRowsTextarea/>
+        <Table rows={data} headColumns={headColumns}/>
     </>;
 }
