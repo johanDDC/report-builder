@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 
 import {withLoadedPromiseAndParams} from "../editor/utils";
 import * as API from "../editor/api";

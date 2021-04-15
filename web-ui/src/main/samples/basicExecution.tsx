@@ -1,11 +1,11 @@
-import React, {useState} from "react";
+import * as React from "react";
 
 function executer(code: string) {
     return new Function("messages", code);
 }
 
 export default function BasicExecutor() {
-    const [log, setLog] = useState([]);
+    const [log, setLog] = React.useState([]);
     let logCopy = log;
     let f = executer("messages.add('Hello'); messages.add('World!');");
     const messages = {
