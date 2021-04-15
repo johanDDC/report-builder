@@ -10,44 +10,52 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function downloadCSV(message: any[], config?: TableConfig) {
-    let rows, columns;
-    if (config == undefined) {
-        columns = [];
-        rows = 5;
-    } else {
-        columns =config.columns;
-        rows = config.rowsToView
+function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+    let csv = "";
+    for (let headCol of columns) {
+        csv += headCol + ',';
     }
-    if (columns.length == 0) {
-        columns = Object.keys(message[0]);
-        columns = columns.filter(e => e != "_id");
-    }
-    let query = message;
-    let csv = columns.join(',') + "\r\n";
-    for (let record of query) {
-        if (rows <= 0) {
-            break;
-        }
-        let row = "";
+    csv += "\r\n";
+    for (let row of rows) {
         for (let column of columns) {
-            if (record[column] instanceof Array) {
-                row += JSON.stringify(record[column].join(',')) + ',';
-            } else {
-                row += JSON.stringify(record[column]) + ',';
-            }
+            csv += column.renderer(row[column.header]) + ',';
         }
-        csv += row + "\r\n";
-        rows--;
+        csv += "\r\n";
     }
+    return csv;
+}
+
+function downloadCSV(rows: any[], columns?: string[]) {
+    if (columns == undefined) {
+        columns = Object.keys(rows[0]).filter(e => e != "_id");
+    }
+    let csv = toCSV(rows, formColumns(columns));
     var downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
     downloader.download = 'report.csv';
     downloader.click();
+
+    function formColumns<T>(header: string[]): { header: string, renderer: (t: T) => string }[] {
+        let columns = [];
+        for (let col of header) {
+            columns.push({
+                header: col,
+                renderer: (val: T) => {
+                    if (val instanceof Array) {
+                        return JSON.stringify(val.join(','));
+                    } else {
+                        return JSON.stringify(val);
+                    }
+                },
+            })
+        }
+        return columns;
+    }
 }
 
 function Table(props: { message: any[], config?: TableConfig }) {
+    // let rowsToView = (maxRows != undefined && maxRows >= 0) ? maxRows : 5;
     let columns, rows;
     if (props.config == undefined) {
         columns = [];
