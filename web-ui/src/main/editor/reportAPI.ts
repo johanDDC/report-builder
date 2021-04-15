@@ -1,17 +1,8 @@
-export interface TableConfig {
-    columns?: Array<string>,
-    rowsToView?: number,
-}
-
 export class ReportAPI {
     private static url = "/rest/api/v1/db/testCollection/query/";
-    private config: TableConfig;
+    private headColumns: string[];
 
     constructor() {
-        this.config = {
-            columns: [],
-            rowsToView: 5,
-        };
     }
 
     query(query: {}) {
@@ -26,19 +17,19 @@ export class ReportAPI {
         }
     }
 
-    table(data: Array<JSON>, config?: TableConfig): void {
-        this.configure(config);
+    table(data: Array<JSON>, headColumns?: string[]): void {
+        this.configure(headColumns);
         // @ts-ignore
         postMessage({
             data: data,
-            config: this.config,
+            headColumns: headColumns,
         });
     }
 
-    configure(config: TableConfig) {
-        if (config != undefined) {
-            for (let field of Object.keys(config)) {
-                this.config[field] = config[field];
+    configure(headColumns?: string[]) {
+        if (headColumns != undefined) {
+            for (let column of headColumns) {
+                this.headColumns.push(column);
             }
         }
     }

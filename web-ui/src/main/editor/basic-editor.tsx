@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 // @ts-ignore
 import loader from '@monaco-editor/loader';
 import runCode from "./workerExecution";
-import {TableConfig} from "./reportAPI";
 
 const messagesSource = [
     "const messages = {",
@@ -13,7 +12,7 @@ const messagesSource = [
 function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     let csv = "";
     for (let headCol of columns) {
-        csv += headCol + ',';
+        csv += headCol.header + ',';
     }
     csv += "\r\n";
     for (let row of rows) {
@@ -29,7 +28,9 @@ function downloadCSV(rows: any[], columns?: string[]) {
     if (columns == undefined) {
         columns = Object.keys(rows[0]).filter(e => e != "_id");
     }
+    console.log(formColumns(columns));
     let csv = toCSV(rows, formColumns(columns));
+    console.log(csv.slice(0, 3000));
     var downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
@@ -54,27 +55,18 @@ function downloadCSV(rows: any[], columns?: string[]) {
     }
 }
 
-function Table(props: { message: any[], config?: TableConfig }) {
-    // let rowsToView = (maxRows != undefined && maxRows >= 0) ? maxRows : 5;
-    let columns, rows;
-    if (props.config == undefined) {
-        columns = [];
-        rows = 5;
-    } else {
-        columns = props.config.columns;
-        rows = props.config.rowsToView
-    }
-    if (props.message.length == 0) {
+function Table(props: { rows: any[], headColumns?: string[], maxRows?: number }) {
+    if (props.rows.length == 0) {
         return null;
     }
-    if (columns.length == 0) {
-        columns = Object.keys(props.message[0]);
-        columns = columns.filter(e => e != "_id");
-    }
+    let tableRows = (props.maxRows != undefined && props.maxRows >= 0) ? props.maxRows : 5;
+    let columns = (props.headColumns != undefined)
+        ? props.headColumns
+        : Object.keys(props.rows[0]).filter(e => e != "_id");
     return <table className="tableContainer">
         <tbody>
-        {props.message.map((obj, key) => {
-            if (key > rows) {
+        {props.rows.map((obj, key) => {
+            if (key > tableRows) {
                 return null;
             }
             let row = [];
@@ -98,7 +90,7 @@ function Table(props: { message: any[], config?: TableConfig }) {
 function BasicEditor() {
     const editorContainer = useRef(null);
     const [data, setData] = useState([]);
-    const [tableConfig, setTableConfig] = useState(undefined);
+    const [headColumns, setHeadColumns] = useState(undefined);
     const [editor, setEditor] = useState(null);
     const code = "api.table(api.query({}));";
 
@@ -124,7 +116,7 @@ function BasicEditor() {
         <button
             onClick={() => runCode(editor.getValue()).then(message => {
                 setData(message.data.data);
-                setTableConfig(message.data.config);
+                setHeadColumns(message.data.headColumns);
             })}>
             Run in worker
         </button>
@@ -132,7 +124,7 @@ function BasicEditor() {
             onClick={() => downloadCSV(data)}>
             Download CSV
         </button>
-        <Table message={data} config={tableConfig}/>
+        <Table rows={data} headColumns={headColumns}/>
     </>;
 }
 
