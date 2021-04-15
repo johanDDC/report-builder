@@ -1,22 +1,23 @@
-let worker;
+export class WorkerManager {
+    private _worker: Worker;
 
-export function getWorker() {
-    if (!worker) {
-        if (window.Worker) {
-            worker = new Worker("js/worker.execution.js");
-        } else {
-            worker = null;
+    constructor(private readonly _workerUrl: string) {}
+
+    getWorker(): Worker {
+        if (!this._worker) {
+            if (!window.Worker) throw Error("Workers are not supported");
+            this._worker = new Worker(this._workerUrl);
         }
+        return this._worker;
     }
-    return worker;
-}
 
-export default function runCode(code: string): Promise<MessageEvent> {
-    let worker = getWorker();
-    if (worker == null) {
-        alert("Problem with worker initialization");
-        return;
+    runCode(code: string): Promise<MessageEvent> {
+        let worker = this.getWorker();
+        if (worker == null) {
+            alert("Problem with worker initialization");
+            return;
+        }
+        worker.postMessage(code);
+        return new Promise(resolve => worker.onmessage = (response) => resolve(response));
     }
-    worker.postMessage(code);
-    return new Promise(resolve => worker.onmessage = (response) => resolve(response));
 }
