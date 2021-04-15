@@ -55,18 +55,20 @@ function downloadCSV(rows: any[], columns?: string[]) {
     }
 }
 
-function Table(props: { rows: any[], headColumns?: string[], maxRows?: number }) {
+function Table(props: { rows: any[], headColumns?: string[] }) {
     if (props.rows.length == 0) {
         return null;
     }
-    let tableRows = (props.maxRows != undefined && props.maxRows >= 0) ? props.maxRows : 5;
+    let tableRows = localStorage.getItem("maxRows") == null
+        ? 5
+        : JSON.parse(localStorage.getItem("maxRows"));
     let columns = (props.headColumns != undefined)
         ? props.headColumns
         : Object.keys(props.rows[0]).filter(e => e != "_id");
     return <table className="tableContainer">
         <tbody>
         {props.rows.map((obj, key) => {
-            if (key > tableRows) {
+            if (key >= tableRows) {
                 return null;
             }
             let row = [];
@@ -84,6 +86,22 @@ function Table(props: { rows: any[], headColumns?: string[], maxRows?: number })
         })}
         </tbody>
     </table>;
+}
+
+function MaxRowsTextarea() {
+    const [maxRows, setMaxRows] = useState(localStorage.getItem("maxRows") != null
+        ? JSON.parse(localStorage.getItem("maxRows"))
+        : 5);
+    if (localStorage.getItem("maxRows") == null) {
+        localStorage.setItem("maxRows", JSON.stringify(5));
+    }
+
+
+    return <input maxLength={3} type="number" min={1} max={100} value={maxRows}
+                  onChange={(val) => {
+                      setMaxRows(val.target.value);
+                      localStorage.setItem("maxRows", JSON.stringify(val.target.value))
+                  }}/>;
 }
 
 
@@ -125,6 +143,7 @@ function BasicEditor() {
             disabled={data.length == 0}>
             Download CSV
         </button>
+        <MaxRowsTextarea/>
         <Table rows={data} headColumns={headColumns}/>
     </>;
 }
