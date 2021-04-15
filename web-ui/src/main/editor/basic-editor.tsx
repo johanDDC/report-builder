@@ -121,7 +121,8 @@ function BasicEditor() {
             Run in worker
         </button>
         <button
-            onClick={() => downloadCSV(data)}>
+            onClick={() => downloadCSV(data)}
+            disabled={data.length == 0}>
             Download CSV
         </button>
         <Table rows={data} headColumns={headColumns}/>
