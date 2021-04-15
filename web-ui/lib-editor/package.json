@@ -1,12 +1,17 @@
 {
-  "name": "test-report-builder",
+  "name": "@crm/report-builder-editor",
   "version": "0.1.0",
-  "description": "Server and webApp to test TS/JS based report builder",
-  "private": true,
+  "description": "TS/JS based report builder",
+  "main": "./dist/lib.js",
+  "private": false,
+  "publishConfig": {
+    "registry": "https://nexus.almworks.com/repository/npm-crm"
+  },
   "scripts": {
-    "webpack": "./node/node node_modules/webpack/bin/webpack.js --mode development --progress --devtool source-map",
-    "webpack-dev": "./node/node ./node_modules/webpack/bin/webpack.js --watch --mode development --progress --profile --devtool source-map --output-pathinfo --bail",
-    "test": "mocha --extension ts --require node_modules/ts-node/register src/**/*.spec.ts"
+    "webpack": "../node/node ../node_modules/webpack/bin/webpack.js --mode development --progress --devtool source-map",
+    "webpack-dev": "../node/node ../node_modules/webpack/bin/webpack.js --watch --mode development --progress --profile --devtool source-map --output-pathinfo --bail",
+    "test": "mocha --extension ts --require node_modules/ts-node/register src/**/*.spec.ts",
+    "deploy": "npm run webpack && npm publish"
   },
   "dependencies": {
     "npm": "^7.9.0"

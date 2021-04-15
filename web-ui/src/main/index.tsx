@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import HelloWorld from './samples/HelloWorld';
 import BasicExecutor from "./samples/basicExecution";
-import BasicEditor from "./editor/basic-editor";
+import {BasicEditor} from "./editor/basic-editor";
 import ServerController from "./samples/serverController";
 
 document.addEventListener('DOMContentLoaded', () => {

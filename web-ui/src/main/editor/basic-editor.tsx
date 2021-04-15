@@ -43,7 +43,7 @@ function Table(props: { data: Array<JSON> }) {
 }
 
 
-function BasicEditor() {
+export function BasicEditor() {
     const editorContainer = useRef(null);
     const [data, setData] = useState([]);
     const [editor, setEditor] = useState(null);
@@ -76,5 +76,3 @@ function BasicEditor() {
         <Table data={data}/>
     </>;
 }
-
-export default BasicEditor;
