@@ -1,15 +1,20 @@
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        "server": path.join(__dirname, 'src', 'main', 'index.tsx'),
-        "worker.execution": path.join(__dirname, 'src', 'main', 'editor', 'worker-runner.js')
+        "lib": {
+            import: path.join(__dirname, 'index.ts'),
+            // import: "../src/main/editor/basic-editor.tsx",
+            library: {
+                name: "LibWorker",
+                type: 'umd'
+            }
+        }
     },
     output: {
-        path: path.join(__dirname, 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
-            'jsreports', 'js'),
-        filename: '[name].js'
+        // path: path.join(__dirname, 'target', 'classes', 'com', 'almworks', 'dyoma', 'crm',
+        //     'jsreports', 'js'),
+        // filename: '[name].js'
     },
     externals: {
         react: 'React',
@@ -54,10 +59,4 @@ module.exports = {
             '.js'
         ]
     },
-    plugins: [
-        new CopyPlugin([
-            {from: './src/main/index.html', to: '../'},
-            {from: './src/main/alm-crm.css', to: '../resources'}
-        ]),
-    ]
 };
