@@ -9,7 +9,7 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     let csv = "";
     for (let headCol of columns) {
         csv += headCol.header + ',';
