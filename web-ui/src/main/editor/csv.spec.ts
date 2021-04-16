@@ -12,7 +12,7 @@ describe('CSV', () => {
         expect(toCSV(["aa,a", "bb, b"], [{header: 'C', renderer: t => '' + t}]))
             .eq('C\r\n"aa,a"\r\n"bb, b"\r\n');
         expect(toCSV(["a\"a\"a", "\"bb, b\""], [{header: 'C', renderer: t => '' + t}]))
-            .eq('C\r\n"a\"a\"a"\r\n"\"bb, b\""\r\n');
+            .eq('C\r\n"a""a""a"\r\n"""bb, b"""\r\n');
         expect(toCSV(["a\r\na", "bb\r\n", "\r\ncc"], [{header: 'C', renderer: t => '' + t}]))
             .eq('C\r\n"a\r\na"\r\n"bb\r\n"\r\n"\r\ncc"\r\n');
     });
@@ -30,5 +30,9 @@ describe('CSV', () => {
     it('linuxLineBreaks', () => {
         expect(toCSV(["\naaa\n", "bb\nb"], [{header: 'C', renderer: t => '' + t}]))
             .eq('C\r\n"\naaa\n"\r\n"bb\nb"\r\n');
+    });
+    it('return', () => {
+        expect(toCSV([], [{header: 'C\r', renderer: t => '' + t}]))
+            .eq('"C\r"\r\n');
     });
 })
