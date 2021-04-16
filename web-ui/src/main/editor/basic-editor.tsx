@@ -27,7 +27,11 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
             if (i > 0) {
                 csv += ',';
             }
-            csv += column.renderer(row);
+            let renderedField = column.renderer(row);
+            if (renderedField.indexOf("\"") >= 0 || renderedField.indexOf("\r\n") >= 0 || renderedField.indexOf(",") >= 0) {
+                renderedField = '"' + renderedField + '"';
+            }
+            csv += renderedField;
         }
         csv += "\r\n";
     }
