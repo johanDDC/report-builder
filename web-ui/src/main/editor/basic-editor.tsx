@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import runCode from "./workerExecution";
+import {WorkerManager} from "./workerExecution";
 
 const messagesSource = [
     "const messages = {",
@@ -106,10 +106,10 @@ function MaxRowsTextarea() {
 }
 
 export function BasicEditor({workerManager, code}: {workerManager: WorkerManager, code: string}) {
-    const editorContainer = useRef(null);
-    const [data, setData] = useState([]);
-    const [headColumns, setHeadColumns] = useState(undefined);
-    const [editor, setEditor]: [editor.IStandaloneCodeEditor,(e: editor.IStandaloneCodeEditor) => void] = useState(null);
+    const editorContainer = React.useRef(null);
+    const [data, setData] = React.useState([]);
+    const [headColumns, setHeadColumns] = React.useState(undefined);
+    const [editor, setEditor]: [editor.IStandaloneCodeEditor,(e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
 
     const showCode = () => {
         alert(editor.getValue());
@@ -126,7 +126,7 @@ export function BasicEditor({workerManager, code}: {workerManager: WorkerManager
             });
         }
     }, []);
-    useEffect(() => {
+    React.useEffect(() => {
         if (editor) editor.setValue(code)
     }, [editor, code])
 
