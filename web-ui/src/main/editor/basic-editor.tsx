@@ -1,4 +1,5 @@
 import * as React from 'react';
+// @ts-ignore
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
@@ -11,14 +12,22 @@ const messagesSource = [
 ].join('\n');
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+    /* https://tools.ietf.org/html/rfc4180#page-2 */
     let csv = "";
-    for (let headCol of columns) {
-        csv += headCol.header + ',';
+    for (let i = 0; i < columns.length; i++) {
+        if (i > 0) {
+            csv += ',';
+        }
+        csv += columns[i].header;
     }
     csv += "\r\n";
     for (let row of rows) {
-        for (let column of columns) {
-            csv += column.renderer(row[column.header]) + ',';
+        for (let i = 0; i < columns.length; i++) {
+            let column = columns[i];
+            if (i > 0) {
+                csv += ',';
+            }
+            csv += column.renderer(row);
         }
         csv += "\r\n";
     }
@@ -44,10 +53,11 @@ function downloadCSV(rows: any[], columns?: string[]) {
             columns.push({
                 header: col,
                 renderer: (val: T) => {
-                    if (val instanceof Array) {
-                        return JSON.stringify(val.join(','));
+                    let value = val[col];
+                    if (value instanceof Array) {
+                        return JSON.stringify(value.join(','));
                     } else {
-                        return JSON.stringify(val);
+                        return JSON.stringify(value);
                     }
                 },
             })
@@ -105,11 +115,11 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-export function BasicEditor({workerManager, code}: {workerManager: WorkerManager, code: string}) {
+export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const editorContainer = React.useRef(null);
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
-    const [editor, setEditor]: [editor.IStandaloneCodeEditor,(e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
+    const [editor, setEditor]: [editor.IStandaloneCodeEditor, (e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
 
     const showCode = () => {
         alert(editor.getValue());
