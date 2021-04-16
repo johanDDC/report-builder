@@ -19,6 +19,7 @@ export class ReportAPI {
     private headColumns: string[];
 
     constructor(private readonly _reuestBuilder: QueryRequestBuilder) {
+        this.headColumns = [];
     }
 
     query(query: {}, context: any) {
