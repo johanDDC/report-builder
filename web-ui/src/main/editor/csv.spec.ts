@@ -27,4 +27,8 @@ describe('CSV', () => {
             {header: "C 2, or 2\r\nC", renderer: t => '' + t},
         ])).eq('"C 1, or 1 C","C 2, or 2\r\nC"\r\naa aa,aa aa\r\nbbb b,bbb b\r\nccc  ,ccc  \r\n aaa, aaa\r\n');
     });
+    it('linuxLineBreaks', () => {
+        expect(toCSV(["\naaa\n", "bb\nb"], [{header: 'C', renderer: t => '' + t}]))
+            .eq('C\r\n"\naaa\n"\r\n"bb\nb"\r\n');
+    });
 })
