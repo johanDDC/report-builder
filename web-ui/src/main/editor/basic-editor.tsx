@@ -37,7 +37,7 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
         if (typeof field == "string") {
             field = field.replace(/"/g, '""')
         }
-        if (field.indexOf("\"") >= 0 || field.indexOf("\r\n") >= 0 || field.indexOf(",") >= 0) {
+        if (field.indexOf("\"") >= 0 || field.indexOf("\r\n") >= 0 || field.indexOf(",") >= 0 || field.indexOf("\n") >= 0) {
             field = "\"" + field + "\"";
         }
         return field;
