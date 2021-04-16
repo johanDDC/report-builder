@@ -1,6 +1,7 @@
-import React, {useEffect, useRef, useState} from 'react';
+import * as React from 'react';
+import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
-import loader from '@monaco-editor/loader';
+import {editor} from "monaco-editor/monaco";
 import runCode from "./workerExecution";
 
 const messagesSource = [
@@ -9,7 +10,7 @@ const messagesSource = [
     "}"
 ].join('\n');
 
-function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     let csv = "";
     for (let headCol of columns) {
         csv += headCol.header + ',';
@@ -89,7 +90,7 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
 }
 
 function MaxRowsTextarea() {
-    const [maxRows, setMaxRows] = useState(localStorage.getItem("maxRows") != null
+    const [maxRows, setMaxRows] = React.useState(localStorage.getItem("maxRows") != null
         ? JSON.parse(localStorage.getItem("maxRows"))
         : 5);
     if (localStorage.getItem("maxRows") == null) {
@@ -106,18 +107,19 @@ function MaxRowsTextarea() {
 
 
 export function BasicEditor() {
-    const editorContainer = useRef(null);
-    const [data, setData] = useState([]);
-    const [headColumns, setHeadColumns] = useState(undefined);
-    const [editor, setEditor] = useState(null);
+    const editorContainer = React.useRef(null);
+    const [data, setData] = React.useState([]);
+    const [headColumns, setHeadColumns] = React.useState(undefined);
+    const [editor, setEditor] = React.useState(null);
     const code = "api.table(api.query({}));";
 
     const showCode = () => {
         alert(editor.getValue());
     }
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (editorContainer.current) {
+            const loader = monaco_loader as any; // Workaround of wrong default export
             loader.init().then(monaco => {
                 monaco.languages.typescript.typescriptDefaults.addExtraLib(messagesSource)
                 setEditor(monaco.editor.create(editorContainer.current, {
