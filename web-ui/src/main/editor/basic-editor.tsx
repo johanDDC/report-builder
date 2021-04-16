@@ -1,4 +1,5 @@
 import * as React from 'react';
+// @ts-ignore
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
@@ -11,18 +12,36 @@ const messagesSource = [
 ].join('\n');
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
+    /* https://tools.ietf.org/html/rfc4180#page-2 */
     let csv = "";
-    for (let headCol of columns) {
-        csv += headCol.header + ',';
+    for (let i = 0; i < columns.length; i++) {
+        if (i > 0) {
+            csv += ',';
+        }
+        csv += escape(columns[i].header);
     }
     csv += "\r\n";
     for (let row of rows) {
-        for (let column of columns) {
-            csv += column.renderer(row[column.header]) + ',';
+        for (let i = 0; i < columns.length; i++) {
+            let column = columns[i];
+            if (i > 0) {
+                csv += ',';
+            }
+            csv += escape(column.renderer(row));
         }
         csv += "\r\n";
     }
     return csv;
+
+    function escape(field: string) {
+        if (typeof field == "string") {
+            field = field.replace(/"/g, '""')
+        }
+        if (field.indexOf("\"") >= 0 || field.indexOf(",") >= 0 || field.indexOf("\n") >= 0 || field.indexOf("\r") >= 0) {
+            field = "\"" + field + "\"";
+        }
+        return field;
+    }
 }
 
 function downloadCSV(rows: any[], columns?: string[]) {
@@ -44,11 +63,11 @@ function downloadCSV(rows: any[], columns?: string[]) {
             columns.push({
                 header: col,
                 renderer: (val: T) => {
-                    if (val instanceof Array) {
-                        return JSON.stringify(val.join(','));
-                    } else {
-                        return JSON.stringify(val);
+                    let value = val[col];
+                    if (typeof value == "object") {
+                        return JSON.stringify(value);
                     }
+                    return '' + value;
                 },
             })
         }
@@ -86,6 +105,13 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
             return <tr key={key}>{row}</tr>
         })}
         </tbody>
+        <thead>
+        <tr>
+            {
+                columns.map((col, key) => <th key={key}>{col}</th>)
+            }
+        </tr>
+        </thead>
     </table>;
 }
 
@@ -105,11 +131,11 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-export function BasicEditor({workerManager, code}: {workerManager: WorkerManager, code: string}) {
+export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const editorContainer = React.useRef(null);
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
-    const [editor, setEditor]: [editor.IStandaloneCodeEditor,(e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
+    const [editor, setEditor]: [editor.IStandaloneCodeEditor, (e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
 
     const showCode = () => {
         alert(editor.getValue());
