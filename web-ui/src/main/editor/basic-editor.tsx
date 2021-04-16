@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import runCode from "./workerExecution";
+import {WorkerManager} from "./workerExecution";
 
 const messagesSource = [
     "const messages = {",
@@ -105,13 +105,11 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-
-export function BasicEditor() {
+export function BasicEditor({workerManager, code}: {workerManager: WorkerManager, code: string}) {
     const editorContainer = React.useRef(null);
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
-    const [editor, setEditor] = React.useState(null);
-    const code = "api.table(api.query({}));";
+    const [editor, setEditor]: [editor.IStandaloneCodeEditor,(e: editor.IStandaloneCodeEditor) => void] = React.useState(null);
 
     const showCode = () => {
         alert(editor.getValue());
@@ -123,18 +121,20 @@ export function BasicEditor() {
             loader.init().then(monaco => {
                 monaco.languages.typescript.typescriptDefaults.addExtraLib(messagesSource)
                 setEditor(monaco.editor.create(editorContainer.current, {
-                    value: code,
                     language: 'typescript',
                 }));
             });
         }
     }, []);
+    React.useEffect(() => {
+        if (editor) editor.setValue(code)
+    }, [editor, code])
 
     return <>
         <div className="basic-editor" ref={editorContainer}/>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => runCode(editor.getValue()).then(message => {
+            onClick={() => workerManager.runCode(editor.getValue()).then(message => {
                 setData(message.data.data);
                 setHeadColumns(message.data.headColumns);
             })}>

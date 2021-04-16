@@ -1,15 +1,32 @@
+/**
+ * Represents a single query request from report code
+ */
+export interface MongoQuery {
+    /** MongoDB query as JSON */
+    query: any;
+    /** Additional server-specific info about what collection to run query against */
+    context: any;
+}
+
+export interface HttpQueryRequest {
+    url: string;
+    payload: any;
+}
+
+export type QueryRequestBuilder = (query: MongoQuery) => HttpQueryRequest
+
 export class ReportAPI {
-    private static url = "/rest/api/v1/db/testCollection/query/";
     private headColumns: string[];
 
-    constructor() {
+    constructor(private readonly _reuestBuilder: QueryRequestBuilder) {
     }
 
-    query(query: {}) {
+    query(query: {}, context: any) {
+        let queryRequest = this._reuestBuilder({query, context});
         let request = new XMLHttpRequest();
-        request.open("POST", ReportAPI.url, false);
+        request.open("POST", queryRequest.url, false);
         request.setRequestHeader("Content-Type", "application/json");
-        request.send(JSON.stringify({"query": query}));
+        request.send(JSON.stringify(queryRequest.payload));
         if (request.readyState == 4 && request.status == 200) {
             return JSON.parse(request.responseText);
         } else {

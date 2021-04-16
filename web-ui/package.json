@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@monaco-editor/loader": "^1.0.0",
+    "monaco-editor": "0.23.0",
     "axios": "0.21.1",
     "@types/babel__core": "7.1.2",
     "@types/react": "16.14.0",

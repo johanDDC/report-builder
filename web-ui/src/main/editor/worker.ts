@@ -1,7 +1,7 @@
-import {ReportAPI} from "./reportAPI";
+import {QueryRequestBuilder, ReportAPI} from "./reportAPI";
 
-export function processMessage(event) {
+export function processMessage(event, requestBuilder: QueryRequestBuilder) {
   let execution = new Function("api", event.data);
-  let api = new ReportAPI();
+  let api = new ReportAPI(requestBuilder);
   execution(api);
 }

@@ -1,1 +1,1 @@
-export * from "./dist/src/main/editor/basic-editor";
+export * from "./dist/lib-editor/index";

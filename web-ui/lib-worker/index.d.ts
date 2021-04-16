@@ -1,1 +1,1 @@
-export * as default from './dist/src/main/editor/worker'
+export * from './dist/lib-worker/index'

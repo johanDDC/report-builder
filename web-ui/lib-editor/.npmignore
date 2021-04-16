@@ -1,4 +1,3 @@
 .gitignore
 .npmrc
 index.ts
-dist/lib-editor
