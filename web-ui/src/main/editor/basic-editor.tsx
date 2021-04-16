@@ -1,9 +1,8 @@
-import React, {useEffect, useRef, useState} from 'react';
-// @ts-ignore
-import loader, {Monaco} from '@monaco-editor/loader';
-import {WorkerManager} from "./workerExecution";
+import * as React from 'react';
+import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
+import runCode from "./workerExecution";
 
 const messagesSource = [
     "const messages = {",
@@ -91,7 +90,7 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
 }
 
 function MaxRowsTextarea() {
-    const [maxRows, setMaxRows] = useState(localStorage.getItem("maxRows") != null
+    const [maxRows, setMaxRows] = React.useState(localStorage.getItem("maxRows") != null
         ? JSON.parse(localStorage.getItem("maxRows"))
         : 5);
     if (localStorage.getItem("maxRows") == null) {
@@ -116,8 +115,9 @@ export function BasicEditor({workerManager, code}: {workerManager: WorkerManager
         alert(editor.getValue());
     }
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (editorContainer.current) {
+            const loader = monaco_loader as any; // Workaround of wrong default export
             loader.init().then(monaco => {
                 monaco.languages.typescript.typescriptDefaults.addExtraLib(messagesSource)
                 setEditor(monaco.editor.create(editorContainer.current, {
