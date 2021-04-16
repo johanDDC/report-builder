@@ -21,4 +21,10 @@ describe('CSV', () => {
             {header: "C 1", renderer: t => '' + t},
         ])).eq('C 1\r\naa aa\r\nbbb b\r\nccc  \r\n aaa\r\n');
     });
+    it('columnsNames',  () => {
+        expect(toCSV(["aa aa", "bbb b", "ccc  ", " aaa"], [
+            {header: "C 1, or 1 C", renderer: t => '' + t},
+            {header: "C 2, or 2\r\nC", renderer: t => '' + t},
+        ])).eq('"C 1, or 1 C","C 2, or 2\r\nC"\r\naa aa,aa aa\r\nbbb b,bbb b\r\nccc  ,ccc  \r\n aaa, aaa\r\n');
+    });
 })
