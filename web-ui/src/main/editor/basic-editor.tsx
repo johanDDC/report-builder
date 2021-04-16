@@ -58,11 +58,7 @@ function downloadCSV(rows: any[], columns?: string[]) {
                 header: col,
                 renderer: (val: T) => {
                     let value = val[col];
-                    if (value instanceof Array) {
-                        return JSON.stringify(value.join(','));
-                    } else {
-                        return JSON.stringify(value);
-                    }
+                    return '' + value;
                 },
             })
         }
@@ -100,6 +96,13 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
             return <tr key={key}>{row}</tr>
         })}
         </tbody>
+        <thead>
+        <tr>
+            {
+                columns.map((col, key) => <th key={key}>{col}</th>)
+            }
+        </tr>
+        </thead>
     </table>;
 }
 
