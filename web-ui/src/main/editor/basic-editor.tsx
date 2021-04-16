@@ -18,7 +18,7 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
         if (i > 0) {
             csv += ',';
         }
-        csv += columns[i].header;
+        csv += escape(columns[i].header);
     }
     csv += "\r\n";
     for (let row of rows) {
@@ -27,15 +27,21 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
             if (i > 0) {
                 csv += ',';
             }
-            let renderedField = column.renderer(row);
-            if (renderedField.indexOf("\"") >= 0 || renderedField.indexOf("\r\n") >= 0 || renderedField.indexOf(",") >= 0) {
-                renderedField = '"' + renderedField + '"';
-            }
-            csv += renderedField;
+            csv += escape(column.renderer(row));
         }
         csv += "\r\n";
     }
     return csv;
+
+    function escape(field: string) {
+        if (typeof field == "string") {
+            field = field.replace(/"/g, '""')
+        }
+        if (field.indexOf("\"") >= 0 || field.indexOf("\r\n") >= 0 || field.indexOf(",") >= 0) {
+            field = "\"" + field + "\"";
+        }
+        return field;
+    }
 }
 
 function downloadCSV(rows: any[], columns?: string[]) {
