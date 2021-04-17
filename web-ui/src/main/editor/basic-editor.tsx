@@ -135,32 +135,32 @@ function MaxRowsTextarea() {
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
-    const editor = React.useRef<EditorController>()
+    const editor = EditorController.use()
     React.useEffect(() => {
-        editor.current.typescriptLibs.setLibContent('messageSource', messagesSource)
-        editor.current.codeText = code
+        editor.typescriptLibs.setLibContent('messageSource', messagesSource) // No harm to set the same content several times
+        editor.codeText = code
     }, [code])
 
     const showCode = React.useCallback(() => {
-        alert(editor.current.codeText)
+        alert(editor.codeText)
     }, [])
 
     return <>
         <div style={{height: "200px", display: "flex", flexFlow: "row nowrap"}}>
-            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' editorRef={editor}/>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor}/>
             <div style={{height: "100%", width: "50%"}}>
                 <h5>Libraries</h5>
                 <label>
                     <input type='checkbox' onChange={
                         (e) =>
-                            editor.current.typescriptLibs.setLibContent('lib-A', e.target.checked ? 'function A() {}' : null)}/>
+                            editor.typescriptLibs.setLibContent('lib-A', e.target.checked ? 'function A() {}' : null)}/>
                     function A()
                 </label>
             </div>
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.current.codeText).then(message => {
+            onClick={() => workerManager.runCode(editor.codeText).then(message => {
                 setData(message.data.data);
                 setHeadColumns(message.data.headColumns);
             })}>

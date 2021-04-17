@@ -12,6 +12,7 @@ export type Monaco = typeof MMonaco
 export interface ExtraLibs {
   /**
    * Adds new / Changes contents of / Deletes an extra lib
+   * Subsequent updates of the same library (the same key) with the same content are cheap and have no effect (actually do nothing at all)
    * @param key identifiers the lib to update.
    *            If there is no lib - a new one is added
    *            If a lib with the key has been added - its content gets updated (or lib gets deleted)
@@ -127,7 +128,7 @@ export class EditorController {
   private _element: HTMLElement
   private _futureState: {code?: string} = {}
 
-  private constructor() {}
+  constructor() {}
 
   static use(): EditorController {
     let controller = React.useRef(new EditorController());
@@ -198,19 +199,22 @@ export class EditorController {
 interface EditorProps extends React.HTMLAttributes<HTMLDivElement> {
   /** configured language of the editor */
   language: string
-  /** Provides imperative-style control over the editor */
-  editorRef: React.ForwardedRef<EditorController>
+  /**
+   *  Editor controller to connect to the editor.
+   *  If a caller provides different instance, the previous controller will be disposed and the new one will be attached.
+   */
+  controller: EditorController
 }
 
 /**
  * <h3>Usage</h3>
  * <pre>
- *   const editor = useRef();
+ *   const editor = EditorController.use();
  *   useEffect(() => {
  *     editor.current. // Initialize the editor
  *   }, []); // Don't forget to set empty dependencies
  *   return <>
- *     <MonacoEditor editorRef={editor}/>
+ *     <MonacoEditor editorRef={editor} controller={editor} language='typescript'/>
  *     <input onChange={() => editor.current.}/> // Control the editor
  *     </>
  * </pre>
@@ -219,18 +223,14 @@ interface EditorProps extends React.HTMLAttributes<HTMLDivElement> {
  * @param props setup the DIV element
  * @constructor
  */
-export function MonacoEditor({language, editorRef, ...props}: EditorProps) {
-  const controller = EditorController.use();
+export function MonacoEditor({language, controller, ...props}: EditorProps) {
+
   const divRef = React.useRef<HTMLDivElement>();
   React.useEffect(() => {
     controller.attach(divRef.current, {language: language})
     return () => controller.dispose()
-  })
-  return <div {...props}
-              ref={(div) => {
-                divRef.current = div
-                setRef(editorRef, controller)
-              }}/>
+  }, [controller])
+  return <div {...props} ref={divRef}/>
 }
 
 export function setRef<T>(ref: React.ForwardedRef<T>, value: T) {
