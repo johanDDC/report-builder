@@ -4,7 +4,8 @@ import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
-import {EditorController, MonacoEditor} from "./monacoController";
+import {MonacoEditor} from "./monacoController";
+import {ReportEditorController} from "./reportEditor";
 
 const messagesSource = [
     "const messages = {",
@@ -135,32 +136,35 @@ function MaxRowsTextarea() {
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
-    const editor = EditorController.use()
+    const editor = ReportEditorController.use()
     React.useEffect(() => {
-        editor.typescriptLibs.setLibContent('messageSource', messagesSource) // No harm to set the same content several times
-        editor.codeText = code
+        editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
+        editor.controller.codeText = code
     }, [code])
 
     const showCode = React.useCallback(() => {
-        alert(editor.codeText)
+        alert(editor.getWholeReportCode())
     }, [])
 
     return <>
         <div style={{height: "200px", display: "flex", flexFlow: "row nowrap"}}>
-            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor}/>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor.controller}/>
             <div style={{height: "100%", width: "50%"}}>
                 <h5>Libraries</h5>
                 <label>
                     <input type='checkbox' onChange={
-                        (e) =>
-                            editor.typescriptLibs.setLibContent('lib-A', e.target.checked ? 'function A() {}' : null)}/>
+                        (e) => {
+                            if (e.target.checked)
+                                editor.setApiExtension('lib-A', 'declare function A()', 'function A() {}')
+                            else editor.setApiExtension('lib-A', null, null)
+                        }}/>
                     function A()
                 </label>
             </div>
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.codeText).then(message => {
+            onClick={() => workerManager.runCode(editor.getWholeReportCode()).then(message => {
                 setData(message.data.data);
                 setHeadColumns(message.data.headColumns);
             })}>
