@@ -13,17 +13,30 @@ export interface HttpQueryRequest {
     payload: any;
 }
 
-export type QueryRequestBuilder = (query: MongoQuery) => HttpQueryRequest
+export interface MongoProjection {
+    elemMatch: string;
+    exclude: string[];
+    excludeId: boolean;
+    include: string[];
+    slice: {
+        fieldName: string,
+        skip?: number,
+        limit: number,
+    };
+}
+
+export type QueryRequestBuilder = (query: MongoQuery, projection?: MongoProjection,
+                                   limit?: number, offset?: number, sort?: number) => HttpQueryRequest
 
 export class ReportAPI {
     private headColumns: string[];
 
-    constructor(private readonly _reuestBuilder: QueryRequestBuilder) {
+    constructor(private readonly _requestBuilder: QueryRequestBuilder) {
         this.headColumns = [];
     }
 
-    query(query: {}, context: any) {
-        let queryRequest = this._reuestBuilder({query, context});
+    query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: number) {
+        let queryRequest = this._requestBuilder({query, context}, projection, limit, offset, sort);
         let request = new XMLHttpRequest();
         request.open("POST", queryRequest.url, false);
         request.setRequestHeader("Content-Type", "application/json");
