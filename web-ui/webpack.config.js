@@ -16,6 +16,7 @@ module.exports = {
         'react-dom': 'ReactDOM',
         'axios': 'axios',
         '@monaco-editor/loader': 'monaco_loader',
+        'babel__core': 'Babel'
     },
     module: {
         rules: [
