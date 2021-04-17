@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let content = <>
         <HelloWorld/>
         <BasicExecutor/>
-        <BasicEditor workerManager={workerManager} code="api.table(api.query({}));"/>
+        <BasicEditor workerManager={workerManager} code={"api.table(api.query({}));\nA()"}/>
         <ServerController/>
     </>
     ReactDOM.render(content, document.querySelector('#root'));
