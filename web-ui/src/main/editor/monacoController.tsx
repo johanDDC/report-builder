@@ -123,7 +123,6 @@ export namespace MonacoController {
  * If the instance has not been initialized yet, this class will apply updates as soon as the editor instance appears
  */
 export class EditorController {
-  private readonly _listeners = new Listeners<(e: MMonaco.IStandaloneCodeEditor) => void>()
   private _editor: MMonaco.IStandaloneCodeEditor
   private _element: HTMLElement
   private _futureState: {code?: string} = {}
@@ -192,7 +191,6 @@ export class EditorController {
   private onEditorCreated(editor: MMonaco.IStandaloneCodeEditor) {
     this._editor = editor;
     if (this._futureState.code) this._editor.setValue(this._futureState.code)
-    this._listeners.forEachListener(l => l(this._editor))
   }
 }
 
@@ -211,11 +209,11 @@ interface EditorProps extends React.HTMLAttributes<HTMLDivElement> {
  * <pre>
  *   const editor = EditorController.use();
  *   useEffect(() => {
- *     editor.current. // Initialize the editor
+ *     editor. // Initialize the editor
  *   }, []); // Don't forget to set empty dependencies
  *   return <>
  *     <MonacoEditor editorRef={editor} controller={editor} language='typescript'/>
- *     <input onChange={() => editor.current.}/> // Control the editor
+ *     <input onChange={() => editor.}/> // Control the editor
  *     </>
  * </pre>
  * @param language
