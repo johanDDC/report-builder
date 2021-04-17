@@ -2,10 +2,7 @@ package com.almworks.dyoma.crm.jsreports;
 
 import com.google.gson.*;
 import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.glassfish.jersey.spi.Contract;
@@ -27,10 +24,24 @@ public class MongoQueryComponent {
         MongoDB = MongoClient.getDatabase(database);
     }
 
-    public String queryCollection(String collectionName, String query) throws JsonParseException {
+    public String queryCollection(String collectionName, String query, String projection,
+                                  Integer limit, Integer offset, String sort) throws JsonParseException {
         MongoCollection<Document> collection = MongoDB.getCollection(collectionName);
         Document queryDocument = Document.parse(query);
-        List<Document> documents = collection.find(queryDocument).into(new ArrayList<>());
+        FindIterable<Document> iterDoc = collection.find(queryDocument);
+        if (projection != null) {
+            iterDoc.projection(Document.parse(projection));
+        }
+        if (limit != null) {
+            iterDoc.limit(limit);
+        }
+        if (offset != null) {
+            iterDoc.skip(offset);
+        }
+        if (sort != null) {
+            iterDoc.sort(Document.parse(sort));
+        }
+        List<Document> documents = iterDoc.into(new ArrayList<>());
         StringBuilder result = new StringBuilder("[");
         for (int i = 0; i < documents.size(); i++) {
             if (i > 0) {
