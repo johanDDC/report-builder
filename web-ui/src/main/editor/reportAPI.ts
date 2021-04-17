@@ -26,7 +26,7 @@ export interface MongoProjection {
 }
 
 export type QueryRequestBuilder = (query: MongoQuery, projection?: MongoProjection,
-                                   limit?: number, offset?: number, sort?: number) => HttpQueryRequest
+                                   limit?: number, offset?: number, sort?: {}) => HttpQueryRequest
 
 export class ReportAPI {
     private headColumns: string[];
@@ -35,7 +35,7 @@ export class ReportAPI {
         this.headColumns = [];
     }
 
-    query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: number) {
+    query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: {}) {
         let queryRequest = this._requestBuilder({query, context}, projection, limit, offset, sort);
         let request = new XMLHttpRequest();
         request.open("POST", queryRequest.url, false);
