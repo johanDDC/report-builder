@@ -6,6 +6,10 @@ export interface MongoQuery {
     query: any;
     /** Additional server-specific info about what collection to run query against */
     context: any;
+    projection: MongoProjection;
+    limit: number;
+    offset: number;
+    sort: {};
 }
 
 export interface HttpQueryRequest {
@@ -25,8 +29,7 @@ export interface MongoProjection {
     };
 }
 
-export type QueryRequestBuilder = (query: MongoQuery, projection?: MongoProjection,
-                                   limit?: number, offset?: number, sort?: {}) => HttpQueryRequest
+export type QueryRequestBuilder = (query: MongoQuery) => HttpQueryRequest
 
 export class ReportAPI {
     private headColumns: string[];
@@ -36,7 +39,7 @@ export class ReportAPI {
     }
 
     query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: {}) {
-        let queryRequest = this._requestBuilder({query, context}, projection, limit, offset, sort);
+        let queryRequest = this._requestBuilder({query, context, projection, limit, offset, sort});
         let request = new XMLHttpRequest();
         request.open("POST", queryRequest.url, false);
         request.setRequestHeader("Content-Type", "application/json");
