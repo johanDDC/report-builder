@@ -7,6 +7,16 @@ import {Listeners} from "./utils";
 export type Monaco = typeof MMonaco
 
 /**
+ * These languages are:
+ * enumerated in Monaco monaco.languages.getLanguages()
+ * returned by editor.getModel().getModelId()
+ */
+export namespace Languages {
+  export const typescript = 'typescript'
+  export const javascript = 'javascript'
+}
+
+/**
  * Enables control over extra libs
  */
 export interface ExtraLibs {
@@ -65,7 +75,7 @@ export namespace MonacoController {
    * Provides control over typescript extra libs. The libs can be updated even before monaco is initialized
    */
   export function typescriptLibs(): ExtraLibs {
-    return getExtraLibs('typescript', (c) => {
+    return getExtraLibs(Languages.typescript, (c) => {
       if (!_monaco) return null;
       return _monaco.languages.typescript.typescriptDefaults.addExtraLib(c)
     })

@@ -5,7 +5,7 @@ import * as monaco_loader from '@monaco-editor/loader';
 import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
-import {ReportEditorController} from "./reportEditor";
+import {MIME, ReportEditorController} from "./reportEditor";
 
 const messagesSource = [
     "const messages = {",
@@ -155,7 +155,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                     <input type='checkbox' onChange={
                         (e) => {
                             if (e.target.checked)
-                                editor.setApiExtension('lib-A', 'declare function A()', 'function A() {}')
+                                editor.setApiExtension('lib-A', 'declare function A()', {mime: MIME.JS, text: 'function A() {}'})
                             else editor.setApiExtension('lib-A', null, null)
                         }}/>
                     function A()
