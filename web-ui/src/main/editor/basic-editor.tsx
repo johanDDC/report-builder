@@ -7,6 +7,7 @@ import {Execution, WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 import {Messages} from "./reportAPI";
+import * as Console from './console'
 
 const messagesSource = [
     "const messages = {",
@@ -140,12 +141,22 @@ const JS_SLEEP =
   while (Date.now() - start < t);
 }`
 
+const CONSOLE_CLASSES = {
+    [Console.TYPE_INFO]: 'console-info',
+    [Console.TYPE_SYS]: 'console-sys',
+    [Console.TYPE_ERROR]: 'console-error',
+    [Console.CLASS_ROW]: 'console-row',
+    [Console.CLASS_TIME]: 'console-time',
+    [Console.CLASS_MESSAGE]: 'console-message',
+}
+
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
     const [execution, setExecution] = React.useState<Execution>(null)
     const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
+    const log = Console.Collector.use()
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
         editor.controller.codeText = code
@@ -186,6 +197,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                     setHeadColumns(msg.columns)
                 }, Messages.TYPE_REPORT)
                 exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
+                log.setExecution(exec)
                 exec.start(code)
             }}>
             Run in worker
@@ -200,6 +212,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             Terminate
         </button>
         <MaxRowsTextarea/>
+        <Console.Component className='console' messages={log.lastMessages} startMillis={log.startMillis} msgClasses={CONSOLE_CLASSES}/>
         <Table rows={data} headColumns={headColumns}/>
     </>;
 }
