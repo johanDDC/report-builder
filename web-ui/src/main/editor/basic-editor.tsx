@@ -8,12 +8,8 @@ import {MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 import {Messages} from "./reportAPI";
 import * as Console from './console'
-
-const messagesSource = [
-    "const messages = {",
-    "   add: (message : string) => {}",
-    "}"
-].join('\n');
+// @ts-ignore
+import REPORT_API_TYPES from '!!raw-loader!./types-ReportAPI.d.ts';
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     /* https://tools.ietf.org/html/rfc4180#page-2 */
@@ -55,7 +51,7 @@ function downloadCSV(rows: any[], columns?: string[]) {
     console.log(formColumns(columns));
     let csv = toCSV(rows, formColumns(columns));
     console.log(csv.slice(0, 3000));
-    var downloader = document.createElement('a');
+    let downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
     downloader.download = 'report.csv';
@@ -161,7 +157,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [showConsole, setShowConsole] = React.useState(true)
     const [addLib, setAddLib] = React.useState(true)
     React.useEffect(() => {
-        editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
+        editor.setApiExtension('reportAPI', REPORT_API_TYPES, null) // No harm to set the same content several times
         editor.controller.codeText = code
     }, [code])
     React.useEffect(() => {
