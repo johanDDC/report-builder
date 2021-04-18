@@ -58,7 +58,8 @@ module.exports = {
     plugins: [
         new CopyPlugin([
             {from: './src/main/index.html', to: '../'},
-            {from: './src/main/alm-crm.css', to: '../resources'}
+            {from: './src/main/alm-crm.css', to: '../resources'},
+            {from: './src/main/editor/console.css', to: '../resources'}
         ]),
     ]
 };

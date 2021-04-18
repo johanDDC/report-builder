@@ -131,6 +131,16 @@ export class ReportAPI {
         ReportAPI.sendDebugMessage(text, true)
     }
 
+    logException(exception: any) {
+        // @ts-ignore
+        postMessage(Messages.exception(exception))
+    }
+
+    breakpoint() {
+        // Enables search for this string '@breakpoint'
+        console.log('@breakpoint')
+    }
+
     private static sendDebugMessage(text: string, problem: boolean) {
         // @ts-ignore
         postMessage({
