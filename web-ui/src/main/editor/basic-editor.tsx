@@ -157,9 +157,9 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
 
     return <>
         <div style={{height: "200px", display: "flex", flexFlow: "row nowrap"}}>
-            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor.controller}/>
-            <div style={{height: "100%", width: "50%"}}>
-                <h5>Libraries</h5>
+            <MonacoEditor style={{flexGrow: 1, width: "50%"}} language='typescript' controller={editor.controller}/>
+            <div style={{height: "100%", flexGrow: 0, minWidth: "8em", marginLeft: ".5rem"}}>
+                <h5 style={{margin: ".1em .3em .1em .5em"}}>Libraries</h5>
                 <label>
                     <input type='checkbox' onChange={
                         (e) => {
