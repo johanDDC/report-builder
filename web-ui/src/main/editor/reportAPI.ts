@@ -31,6 +31,42 @@ export interface MongoProjection {
 
 export type QueryRequestBuilder = (query: MongoQuery) => HttpQueryRequest
 
+/** Declares messages from a report worker to the main (UI) thread */
+export namespace Messages {
+    /** Messages about execution state change: start/finish */
+    export const TYPE_STATE = 'state'
+    /** Messages about report is ready */
+    export const TYPE_REPORT = 'report'
+
+    /** Base interface for all message types */
+    export interface Base {
+        /** Type of the message */
+        readonly type: string
+    }
+
+    /** State-change message */
+    export interface State extends Base {
+        readonly running: boolean
+        readonly error: string | null
+    }
+
+    /**
+     * @param error cause of termination. If set, the execution has finished with this error
+     * @param running true if the report execution is in progress
+     * @return state-change message
+     */
+    export function state(error: string, running?: boolean): State {
+        if (error) return {type: TYPE_STATE, running: false, error}
+        if (running === undefined) console.error("Missing running state")
+        return {type: TYPE_STATE, running: !!running, error: null}
+    }
+
+    export interface Report extends Base {
+        readonly data: any[]
+        readonly columns?: string[]
+    }
+}
+
 export class ReportAPI {
     private headColumns: string[];
 
@@ -55,6 +91,7 @@ export class ReportAPI {
         this.configure(headColumns);
         // @ts-ignore
         postMessage({
+            type: Messages.TYPE_REPORT,
             data: data,
             headColumns: headColumns,
         });

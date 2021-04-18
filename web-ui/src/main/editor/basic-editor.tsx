@@ -3,9 +3,10 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import {WorkerManager} from "./workerExecution";
+import {Execution, WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
+import {Messages} from "./reportAPI";
 
 const messagesSource = [
     "const messages = {",
@@ -133,9 +134,17 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
+const JS_SLEEP =
+`function sleep(t) {
+  const start = Date.now();
+  while (Date.now() - start < t);
+}`
+
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
+    const [execution, setExecution] = React.useState<Execution>(null)
+    const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
@@ -155,25 +164,40 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                     <input type='checkbox' onChange={
                         (e) => {
                             if (e.target.checked)
-                                editor.setApiExtension('lib-A', 'declare function A()', {mime: MIME.JS, text: 'function A() {}'})
-                            else editor.setApiExtension('lib-A', null, null)
+                                editor.setApiExtension('lib-sleep', 'function sleep(time: number)', {mime: MIME.JS, text: JS_SLEEP})
+                            else editor.setApiExtension('lib-sleep', null, null)
                         }}/>
-                    function A()
+                    sleep()
                 </label>
             </div>
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.getWholeReportCode()).then(message => {
-                setData(message.data.data);
-                setHeadColumns(message.data.headColumns);
-            })}>
+            onClick={() => {
+                let code = editor.getWholeReportCode();
+                let exec = workerManager.newExecution();
+                setExecution(exec)
+                setData([])
+                setHeadColumns(undefined)
+                setExecState(exec.state)
+                exec.listenMessages(m => {
+                    const msg = m as Messages.Report
+                    setData(msg.data)
+                    setHeadColumns(msg.columns)
+                }, Messages.TYPE_REPORT)
+                exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
+                exec.start(code)
+            }}>
             Run in worker
         </button>
         <button
             onClick={() => downloadCSV(data)}
             disabled={data.length == 0}>
             Download CSV
+        </button>
+        <button onClick={() => execution.terminate("Terminated by the user")}
+                disabled={!execution || !execState || !execState.running}>
+            Terminate
         </button>
         <MaxRowsTextarea/>
         <Table rows={data} headColumns={headColumns}/>
