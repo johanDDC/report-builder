@@ -1,5 +1,8 @@
 import * as React from "react";
 import {ComponentClass, FunctionComponent, MutableRefObject, useRef, useState} from "react";
+import * as SimpleUtil from "./simpleUtils"
+
+export const Listeners = SimpleUtil.Listeners;
 
 export type RComponent<T> = FunctionComponent<T> | ComponentClass<T>;
 
@@ -66,22 +69,3 @@ export function withLoadedPromiseAndParams<D, P>(loader: () => Promise<D>,
   return () => <LoadPromise {...params} />;
 }
 
-export class Listeners<L> {
-  private next: number = 0;
-  private listeners: any = {};
-
-  addListener(l: L): () => void {
-    const key = this.next;
-    this.next++;
-    this.listeners[key] = l;
-    return () => {
-      delete this.listeners[key];
-    }
-  }
-
-  forEachListener(f: (l: L) => void): void {
-    for (let k in this.listeners) {
-      if (this.listeners.hasOwnProperty(k)) f(this.listeners[k]);
-    }
-  }
-}
