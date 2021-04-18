@@ -148,6 +148,7 @@ const CONSOLE_CLASSES = {
     [Console.CLASS_ROW]: 'console-row',
     [Console.CLASS_TIME]: 'console-time',
     [Console.CLASS_MESSAGE]: 'console-message',
+    [Console.CLASS_EXCEPTION]: 'console-exception',
 }
 
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
@@ -157,10 +158,16 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
     const log = Console.Collector.use()
+    const [showConsole, setShowConsole] = React.useState(true)
+    const [addLib, setAddLib] = React.useState(true)
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
         editor.controller.codeText = code
     }, [code])
+    React.useEffect(() => {
+        if (addLib) editor.setApiExtension('lib-sleep', 'function sleep(time: number)', {mime: MIME.JS, text: JS_SLEEP})
+        else editor.setApiExtension('lib-sleep', null, null)
+    }, [addLib])
 
     const showCode = React.useCallback(() => {
         alert(editor.getWholeReportCode())
@@ -172,12 +179,8 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             <div style={{height: "100%", flexGrow: 0, minWidth: "8em", marginLeft: ".5rem"}}>
                 <h5 style={{margin: ".1em .3em .1em .5em"}}>Libraries</h5>
                 <label>
-                    <input type='checkbox' onChange={
-                        (e) => {
-                            if (e.target.checked)
-                                editor.setApiExtension('lib-sleep', 'function sleep(time: number)', {mime: MIME.JS, text: JS_SLEEP})
-                            else editor.setApiExtension('lib-sleep', null, null)
-                        }}/>
+                    <input type='checkbox' checked={addLib} onChange={
+                        (e) => setAddLib(e.target.checked)}/>
                     sleep()
                 </label>
             </div>
@@ -211,8 +214,15 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                 disabled={!execution || !execState || !execState.running}>
             Terminate
         </button>
+        <label>
+            Show Console
+            <input type='checkbox' checked={showConsole} onChange={(e) => setShowConsole(e.target.checked)}/>
+        </label>
         <MaxRowsTextarea/>
-        <Console.Component className='console' messages={log.lastMessages} startMillis={log.startMillis} msgClasses={CONSOLE_CLASSES}/>
-        <Table rows={data} headColumns={headColumns}/>
+        {showConsole ?
+            <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages} startMillis={log.startMillis}
+                               onReport={() => setShowConsole(false)}/>
+            : <Table rows={data} headColumns={headColumns}/>
+        }
     </>;
 }

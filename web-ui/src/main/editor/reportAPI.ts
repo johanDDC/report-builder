@@ -37,6 +37,10 @@ export namespace Messages {
     export const TYPE_STATE = 'state'
     /** Messages about report is ready */
     export const TYPE_REPORT = 'report'
+    /** Debug message from the script */
+    export const TYPE_DEBUG = 'debug'
+    /** The message contains serialized exception */
+    export const TYPE_EXCEPTION = 'exception'
 
     /** Base interface for all message types */
     export interface Base {
@@ -62,36 +66,89 @@ export namespace Messages {
     }
 
     export interface Report extends Base {
+        /** Report ID. The ID is unique among reports from the same script run */
+        readonly id: number
         readonly data: any[]
         readonly columns?: string[]
+        /** Displayable name of the report */
+        readonly name: string
+    }
+
+    export interface Debug extends Base {
+        readonly problem: boolean
+        readonly text: string
+    }
+
+    export interface Exception extends Base {
+        readonly name?: string
+        readonly message: string
+        readonly stack?: string
+    }
+
+    export function exception(e: any): Exception {
+        const name = e.name;
+        const message = e.message;
+        const stack = e.stack;
+        return {
+            type: TYPE_EXCEPTION,
+            name: typeof name === 'string' ? name : undefined,
+            message: message ? '' + message : e.toString(),
+            stack: typeof stack === 'string' ? stack : undefined
+        }
     }
 }
 
 export class ReportAPI {
     private headColumns: string[];
+    private reportId: number = 1
 
     constructor(private readonly _requestBuilder: QueryRequestBuilder) {
         this.headColumns = [];
     }
 
     query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: {}) {
+        const startTime = new Date().getTime()
         let queryRequest = this._requestBuilder({query, context, projection, limit, offset, sort});
         let request = new XMLHttpRequest();
         request.open("POST", queryRequest.url, false);
         request.setRequestHeader("Content-Type", "application/json");
         request.send(JSON.stringify(queryRequest.payload));
+        const elasped = new Date().getTime() - startTime
         if (request.readyState == 4 && request.status == 200) {
+            ReportAPI.sendDebugMessage(`Query succeeded in ${elasped}ms`, false)
             return JSON.parse(request.responseText);
         } else {
-            return {};  // TODO errors
+            ReportAPI.sendDebugMessage(`Query failed in ${elasped}ms with status code ${request.status}`, true)
+            throw Error(`Server responded with status code ${request.status}`)
         }
     }
 
-    table(data: Array<JSON>, headColumns?: string[]): void {
+    logInfo(text: string) {
+        ReportAPI.sendDebugMessage(text, false)
+    }
+
+    logError(text: string) {
+        ReportAPI.sendDebugMessage(text, true)
+    }
+
+    private static sendDebugMessage(text: string, problem: boolean) {
+        // @ts-ignore
+        postMessage({
+            type: Messages.TYPE_DEBUG,
+            problem,
+            text
+        })
+    }
+
+    table(data: Array<JSON>, name?: string, headColumns?: string[]): void {
         this.configure(headColumns);
+        const id = this.reportId++
+        if (!name) name = 'Report #' + id
         // @ts-ignore
         postMessage({
             type: Messages.TYPE_REPORT,
+            name: name,
+            id: id,
             data: data,
             headColumns: headColumns,
         });

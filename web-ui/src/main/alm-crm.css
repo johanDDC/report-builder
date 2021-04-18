@@ -1,6 +1,7 @@
 .console {
-  white-space: pre-wrap;
   font-family: monospace, monospace;
+  font-size: 75%;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
   overflow-y: scroll;
   height: 10rem;
@@ -21,6 +22,14 @@
   flex-grow: 1;
 }
 
+.console-message a {
+  cursor: pointer;
+}
+
+.console-message a:hover {
+  text-decoration: underline;
+}
+
 .console-info {
   color: black;
 }
@@ -31,4 +40,12 @@
 
 .console-error {
   color: #bf0606;
+}
+
+.console-exception {
+  border: 1px solid #f4e4e4;
+  background: #fff3f3;
+  border-radius: .3em;
+  padding: .05em .25em;
+  color: #370000;
 }
