@@ -8,6 +8,7 @@ import {MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 import {Messages} from "./reportAPI";
 import * as Console from './console'
+import {MessageCssType} from './console'
 // @ts-ignore
 import REPORT_API_TYPES from '!!raw-loader!./types-ReportAPI.d.ts';
 
@@ -137,7 +138,7 @@ const JS_SLEEP =
   while (Date.now() - start < t);
 }`
 
-const CONSOLE_CLASSES = {
+const CONSOLE_CLASSES: MessageCssType = {
     [Console.TYPE_INFO]: 'console-info',
     [Console.TYPE_SYS]: 'console-sys',
     [Console.TYPE_ERROR]: 'console-error',

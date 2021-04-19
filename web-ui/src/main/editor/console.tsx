@@ -8,10 +8,12 @@ export const TYPE_INFO = 'info'
 export const TYPE_SYS = 'sys'
 export const TYPE_ERROR = 'error'
 
+export type MessageType = typeof TYPE_INFO | typeof TYPE_SYS | typeof TYPE_ERROR;
+
 export interface Message {
   readonly elapsed: number
   readonly text: string
-  readonly type: string
+  readonly type: MessageType
   readonly report?: {
     id: number
     name: string
@@ -96,7 +98,7 @@ export class Collector {
     }
   }
 
-  private static onDebugMessage(elapsed: number, msg: Messages.Debug) {
+  private static onDebugMessage(elapsed: number, msg: Messages.Debug): Message {
     const type = msg.problem ? TYPE_ERROR : TYPE_INFO
     return {elapsed, type, text: msg.text};
   }
@@ -112,6 +114,10 @@ export const CLASS_TIME = 'time'
 export const CLASS_MESSAGE = 'message'
 export const CLASS_EXCEPTION = 'exception'
 
+export type MessageCssType = {
+  [type in MessageType | typeof CLASS_ROW | typeof CLASS_TIME | typeof CLASS_MESSAGE | typeof CLASS_EXCEPTION]: string
+}
+
 export interface ConsoleProps extends React.HTMLAttributes<HTMLDivElement> {
   messages: Message[],
   startMillis: number,
@@ -120,7 +126,7 @@ export interface ConsoleProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Custom message renderer */
   MessageBody?: RComponent<LogMessageProps>
   /** CSS classes for parts of message and message types */
-  msgClasses: {[type: string]: string}
+  msgClasses: MessageCssType
 }
 
 function displayTime(millis: number) {
@@ -169,7 +175,7 @@ export function formatException(name: string, message: string, stack: string): [
   return [header, stackArray]
 }
 
-export function LogMessage({message, onReport, msgClasses}: LogMessageProps) {
+export function LogMessage({message, onReport}: LogMessageProps) {
   const report = message.report;
   if (report) {
     let reportName = !onReport ? report.name :
@@ -177,7 +183,7 @@ export function LogMessage({message, onReport, msgClasses}: LogMessageProps) {
           e.preventDefault();
           onReport(report.id)
         }}>{report.name}</a>;
-    return <div className={msgClasses[CLASS_MESSAGE]}>Report {reportName} (rows: {report.rows})</div>
+    return <>Report {reportName} (rows: {report.rows})</>
   }
   const exception = message.exception
   if (exception) {
@@ -188,23 +194,30 @@ export function LogMessage({message, onReport, msgClasses}: LogMessageProps) {
       while (s.length < maxLen) s += ' '
       return s
     }
-    return <div className={msgClasses[CLASS_EXCEPTION]}>
-      <div>{header}</div>
+    return <>
+      {header + '\n'}
       {stack.map(([first, , file], index) =>
-          <div key={index} style={{marginLeft: "1.5em"}}>{  appendSpaces(first)} {file}</div>
+          <React.Fragment key={index}>{'  '}{appendSpaces(first)} {file + '\n'}</React.Fragment>
       )}
-    </div>
+    </>
   }
-  return <div className={msgClasses[CLASS_MESSAGE]}>{message.text}</div>
+  return message.text
 }
 
 export function Component({messages, startMillis, msgClasses, onReport, MessageBody, ...divProps}: ConsoleProps) {
   if (!MessageBody) MessageBody = LogMessage as RComponent<LogMessageProps>
   return <div {...divProps}>
     {messages.map((msg, index) => {
-      return <div key={index} className={`${msgClasses[CLASS_ROW]} ${msgClasses[msg.type]}`}>
+      let rowTypeClassId;
+      if (msg.exception) rowTypeClassId = CLASS_EXCEPTION
+      else rowTypeClassId = msg.type
+      let rowTypeClass = msgClasses[rowTypeClassId]
+      if (!rowTypeClass) rowTypeClass = ''
+      return <div key={index} className={`${msgClasses[CLASS_ROW]} ${rowTypeClass}`}>
         <div className={msgClasses[CLASS_TIME]}>{displayTime(msg.elapsed)}</div>
-        <MessageBody message={msg} onReport={onReport} msgClasses={msgClasses}/>
+        <div className={msgClasses[CLASS_MESSAGE]}>
+          <MessageBody message={msg} onReport={onReport} msgClasses={msgClasses}/>
+        </div>
       </div>
     })}
   </div>

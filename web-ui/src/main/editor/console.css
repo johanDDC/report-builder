@@ -24,10 +24,7 @@
 
 .console-message a {
   cursor: pointer;
-}
-
-.console-message a:hover {
-  text-decoration: underline;
+  text-decoration: dashed #386EC1 underline;
 }
 
 .console-info {
@@ -42,7 +39,7 @@
   color: #bf0606;
 }
 
-.console-exception {
+.console-exception .console-message {
   border: 1px solid #f4e4e4;
   background: #fff3f3;
   border-radius: .3em;
