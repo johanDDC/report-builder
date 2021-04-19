@@ -1,14 +1,25 @@
 declare type Columns = "show_id" | "country" | "cast" | "director" | "release_date" | "duration" | "description";
 
-declare type Scheme = {}
+type MongoTypes = {
+    object: "object",
+    string: "string",
+    double: "number",
+    bool: "boolean",
+    int: "number",
+    long: "number",
+}
+
+declare type SchemeCollection = { arr?: boolean, type: MongoTypes | { [key: string]: SchemeCollection } }
+
+declare const Scheme: SchemeCollection;
 
 declare type MongoQueryOperator<T> =
     { "$eq": T } | { "$ne": T } |
     { "$in": T[] } | { "$nin": T[] } |
     { "$gt": T } | { "$gte": T } | { "$lt": T } | { "$lte": T } |
-    { "$and": MongoQueryRule[]};
+    { "$and": MongoQueryRule[] };
 
-declare type MongoQueryRule = {[field : Columns]: MongoQueryOperator<any>};
+declare type MongoQueryRule = { [field in Columns]: MongoQueryOperator<???> };
 
 declare type MongoProjection = {
     elemMatch: string;
