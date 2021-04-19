@@ -45,7 +45,7 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
     }
 }
 
-function downloadCSV(rows: any[], columns?: string[]) {
+export function downloadCSV(rows: any[], columns?: string[]) {
     if (columns == undefined) {
         columns = Object.keys(rows[0]).filter(e => e != "_id");
     }
@@ -76,7 +76,7 @@ function downloadCSV(rows: any[], columns?: string[]) {
     }
 }
 
-function Table(props: { rows: any[], headColumns?: string[] }) {
+export function Table(props: { rows: any[], headColumns?: string[] }) {
     if (props.rows.length == 0) {
         return null;
     }
