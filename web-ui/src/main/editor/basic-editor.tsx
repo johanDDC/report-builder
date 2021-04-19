@@ -3,15 +3,14 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import {WorkerManager} from "./workerExecution";
+import {Execution, WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
-
-const messagesSource = [
-    "const messages = {",
-    "   add: (message : string) => {}",
-    "}"
-].join('\n');
+import {Messages} from "./reportAPI";
+import * as Console from './console'
+import {MessageCssType} from './console'
+// @ts-ignore
+import REPORT_API_TYPES from '!!raw-loader!./types-ReportAPI.d.ts';
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     /* https://tools.ietf.org/html/rfc4180#page-2 */
@@ -53,7 +52,7 @@ function downloadCSV(rows: any[], columns?: string[]) {
     console.log(formColumns(columns));
     let csv = toCSV(rows, formColumns(columns));
     console.log(csv.slice(0, 3000));
-    var downloader = document.createElement('a');
+    let downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
     downloader.download = 'report.csv';
@@ -133,14 +132,39 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
+const JS_SLEEP =
+`function sleep(t) {
+  const start = Date.now();
+  while (Date.now() - start < t);
+}`
+
+const CONSOLE_CLASSES: MessageCssType = {
+    [Console.TYPE_INFO]: 'console-info',
+    [Console.TYPE_SYS]: 'console-sys',
+    [Console.TYPE_ERROR]: 'console-error',
+    [Console.CLASS_ROW]: 'console-row',
+    [Console.CLASS_TIME]: 'console-time',
+    [Console.CLASS_MESSAGE]: 'console-message',
+    [Console.CLASS_EXCEPTION]: 'console-exception',
+}
+
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
+    const [execution, setExecution] = React.useState<Execution>(null)
+    const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
+    const log = Console.Collector.use()
+    const [showConsole, setShowConsole] = React.useState(true)
+    const [addLib, setAddLib] = React.useState(true)
     React.useEffect(() => {
-        editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
+        editor.setApiExtension('reportAPI', REPORT_API_TYPES, null) // No harm to set the same content several times
         editor.controller.codeText = code
     }, [code])
+    React.useEffect(() => {
+        if (addLib) editor.setApiExtension('lib-sleep', 'function sleep(time: number)', {mime: MIME.JS, text: JS_SLEEP})
+        else editor.setApiExtension('lib-sleep', null, null)
+    }, [addLib])
 
     const showCode = React.useCallback(() => {
         alert(editor.getWholeReportCode())
@@ -148,26 +172,34 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
 
     return <>
         <div style={{height: "200px", display: "flex", flexFlow: "row nowrap"}}>
-            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor.controller}/>
-            <div style={{height: "100%", width: "50%"}}>
-                <h5>Libraries</h5>
+            <MonacoEditor style={{flexGrow: 1, width: "50%"}} language='typescript' controller={editor.controller}/>
+            <div style={{height: "100%", flexGrow: 0, minWidth: "8em", marginLeft: ".5rem"}}>
+                <h5 style={{margin: ".1em .3em .1em .5em"}}>Libraries</h5>
                 <label>
-                    <input type='checkbox' onChange={
-                        (e) => {
-                            if (e.target.checked)
-                                editor.setApiExtension('lib-A', 'declare function A()', {mime: MIME.JS, text: 'function A() {}'})
-                            else editor.setApiExtension('lib-A', null, null)
-                        }}/>
-                    function A()
+                    <input type='checkbox' checked={addLib} onChange={
+                        (e) => setAddLib(e.target.checked)}/>
+                    sleep()
                 </label>
             </div>
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.getWholeReportCode()).then(message => {
-                setData(message.data.data);
-                setHeadColumns(message.data.headColumns);
-            })}>
+            onClick={() => {
+                let code = editor.getWholeReportCode();
+                let exec = workerManager.newExecution();
+                setExecution(exec)
+                setData([])
+                setHeadColumns(undefined)
+                setExecState(exec.state)
+                exec.listenMessages(m => {
+                    const msg = m as Messages.Report
+                    setData(msg.data)
+                    setHeadColumns(msg.columns)
+                }, Messages.TYPE_REPORT)
+                exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
+                log.setExecution(exec)
+                exec.start(code)
+            }}>
             Run in worker
         </button>
         <button
@@ -175,7 +207,19 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             disabled={data.length == 0}>
             Download CSV
         </button>
+        <button onClick={() => execution.terminate("Terminated by the user")}
+                disabled={!execution || !execState || !execState.running}>
+            Terminate
+        </button>
+        <label>
+            Show Console
+            <input type='checkbox' checked={showConsole} onChange={(e) => setShowConsole(e.target.checked)}/>
+        </label>
         <MaxRowsTextarea/>
-        <Table rows={data} headColumns={headColumns}/>
+        {showConsole ?
+            <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages} startMillis={log.startMillis}
+                               onReport={() => setShowConsole(false)}/>
+            : <Table rows={data} headColumns={headColumns}/>
+        }
     </>;
 }
