@@ -58,6 +58,9 @@ export interface Execution {
     /** Current state of the execution */
     readonly state: Messages.State
 
+    /** When the execution has been started (created) */
+    readonly startedOn: Date
+
     /** Starts execution of the report */
     start(code: string)
 
@@ -66,6 +69,7 @@ export interface Execution {
 }
 
 class ExecutionImpl implements Execution {
+    readonly startedOn = new Date()
     private _listeners = new Listeners<MessageListener>()
 
     constructor(private _state: Messages.State, private _worker: Worker) {
