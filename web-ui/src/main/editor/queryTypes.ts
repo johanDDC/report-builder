@@ -69,9 +69,10 @@
 // type Qall = genQall<Qfield>
 
 // const query: Qall = {_id: {$eq: "1111"}, and: [{n: {$gt: 18}}, {s: "loh"}]}
-declare type SchemeCollection = { arr?: boolean, optional?: boolean, type: string | { [key: string]: SchemeCollection } }
+export type SchemeCollection = { arr?: boolean, type: string | { [key: string]: SchemeCollection } }
+
 // @ts-ignore
-function typesGenerator(scheme: SchemeCollection) {
+export function typesGenerator(scheme: SchemeCollection) {
     let d_ts = "type Qobjid<T> = { \"$eq\": T } | T;\n" +
         "type QPrimitiveField<T> = Qobjid<T> | { \"$ne\": T } |\n" +
         "    { \"$in\": T[] } | { \"$nin\": T[] } |\n" +
@@ -80,34 +81,77 @@ function typesGenerator(scheme: SchemeCollection) {
     let fields = Object.keys(scheme.type);
     for (let field of fields) {
         let currentType: SchemeCollection = scheme.type[field];
-        d_ts += `type Q_${field} = ${constuctType(currentType.type, currentType.arr, field, currentType.optional)};\n`;
+        // let constructedType = constuctType(currentType.type, currentType.arr, field).map(val => {
+        //     val = "\"" + val;
+        //     return `{${val}}`;
+        // }).join("|");
+        let types :string[] = [];
+        inorderWalk(currentType.type, field, currentType.arr, types)
+        d_ts += `type Q_${field} = ${types.map(val => `{${val}}`).join("|")};\n`;
     }
     return d_ts;
 }
 
-export function constuctType(typeDescription: string | { [key: string]: SchemeCollection }, arr?: boolean, fieldName?: string, optional?: boolean) {
+export function constuctType(typeDescription: string | { [key: string]: SchemeCollection }, arr?: boolean, fieldName?: string, types: string[] = [], typeString = "", typesCount = 0): string[] {
+    if (typeString.length == 0) {
+        typeString = `${fieldName}`;
+    } else {
+        typeString += `.${fieldName}`;
+    }
+    for (let i = 0; i < typesCount; i++) {
+        types[i] += `{${fieldName}:`;
+    }
+    types.push(`{${typeString}:`);
     if (typeof typeDescription != "string") {
-        let globalType: string = "";
-        for (let key of Object.keys(typeDescription)) {
-            if (globalType.length > 0) {
-                globalType += "|";
-            }
-            let description = typeDescription[key];
-            let typed: string = constuctType(description.type, description.arr, key);
-            globalType += `{${key}${description.optional ? "?" : ""} : ${typed}}`;
+        for (let field of Object.keys(typeDescription)) {
+            constuctType(typeDescription[field].type, typeDescription[field].arr, field, types, typeString, typesCount + 1);
         }
-        return `{${fieldName}${optional ? "?" : ""} : ${globalType}${arr ? "[]" : ""}}`;
+        for (let i = 0; i <= typesCount; i++) {
+            types[i] += `}`;
+        }
+        return types;
     }
     let primitive: string = "";
-    if (typeDescription == "string"){
+    if (typeDescription == "string") {
         primitive = `QPrimitiveField<string${arr ? "[]" : ""}>`;
-    } else if(typeDescription == "int" || typeDescription == "long" || typeDescription == "double"){
+    } else if (typeDescription == "int" || typeDescription == "long" || typeDescription == "double") {
         primitive = `QPrimitiveField<number${arr ? "[]" : ""}>`;
-    } else if (typeDescription == "bool"){
+    } else if (typeDescription == "bool") {
         primitive = `QPrimitiveField<boolean${arr ? "[]" : ""}>`;
     }
-    return primitive;
+    for (let i = 0; i < types.length; i++) {
+        types[i] += `${primitive}}`;
+    }
+    return types;
 }
+
+export function inorderWalk(typeDescription: string | { [key: string]: SchemeCollection }, fieldName: string, arr?: boolean, types: string[] = [], typeString = ""): string {
+    if (typeString.length == 0) {
+        typeString = fieldName;
+    }
+    if (typeof typeDescription != "string") {
+        let upGoingType = "";
+        let nestedTypes: string[] = [];
+        for (let field of Object.keys(typeDescription)) {
+            nestedTypes.push(inorderWalk(typeDescription[field].type, field, typeDescription[field].arr,
+                types, `${typeString}.${field}`));
+        }
+        types.push(`\"${typeString}\": {${nestedTypes.join(",")}}`);
+        upGoingType = `${fieldName}: {${nestedTypes.join(",")}}`;
+        return upGoingType;
+    }
+    let primitive: string = "";
+    if (typeDescription == "string") {
+        primitive = `QPrimitiveField<string${arr ? "[]" : ""}>`;
+    } else if (typeDescription == "int" || typeDescription == "long" || typeDescription == "double") {
+        primitive = `QPrimitiveField<number${arr ? "[]" : ""}>`;
+    } else if (typeDescription == "bool") {
+        primitive = `QPrimitiveField<boolean${arr ? "[]" : ""}>`;
+    }
+    types.push(`\"${typeString}\": ${primitive}`);
+    return `${fieldName}: ${primitive}`;
+}
+
 // @ts-ignore
 const Scheme1: SchemeCollection = {
     arr: false,
@@ -124,8 +168,9 @@ const Scheme1: SchemeCollection = {
 const Scheme2: SchemeCollection = {
     arr: false,
     type: {
-        duration: {type: {mins: {optional: true, type: "int"}, seasons: {optional: true, type: "int"}}},
+        duration: {type: {mins: {type: "int"}, seasons: {type: "int"}}},
         info: {type: {ses: {arr: true, type: "string"}, dur: {arr: true, type: "int"}}},
         a: {arr: true, type: {b: {type: "int"}}},
+        lol: {type: {ses: {type: {a: {type: "int"}, b: {type: "string"}}}}},
     }
 }
