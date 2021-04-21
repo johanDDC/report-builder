@@ -92,39 +92,6 @@ export function typesGenerator(scheme: SchemeCollection) {
     return d_ts;
 }
 
-export function constuctType(typeDescription: string | { [key: string]: SchemeCollection }, arr?: boolean, fieldName?: string, types: string[] = [], typeString = "", typesCount = 0): string[] {
-    if (typeString.length == 0) {
-        typeString = `${fieldName}`;
-    } else {
-        typeString += `.${fieldName}`;
-    }
-    for (let i = 0; i < typesCount; i++) {
-        types[i] += `{${fieldName}:`;
-    }
-    types.push(`{${typeString}:`);
-    if (typeof typeDescription != "string") {
-        for (let field of Object.keys(typeDescription)) {
-            constuctType(typeDescription[field].type, typeDescription[field].arr, field, types, typeString, typesCount + 1);
-        }
-        for (let i = 0; i <= typesCount; i++) {
-            types[i] += `}`;
-        }
-        return types;
-    }
-    let primitive: string = "";
-    if (typeDescription == "string") {
-        primitive = `QPrimitiveField<string${arr ? "[]" : ""}>`;
-    } else if (typeDescription == "int" || typeDescription == "long" || typeDescription == "double") {
-        primitive = `QPrimitiveField<number${arr ? "[]" : ""}>`;
-    } else if (typeDescription == "bool") {
-        primitive = `QPrimitiveField<boolean${arr ? "[]" : ""}>`;
-    }
-    for (let i = 0; i < types.length; i++) {
-        types[i] += `${primitive}}`;
-    }
-    return types;
-}
-
 export function inorderWalk(typeDescription: string | { [key: string]: SchemeCollection }, fieldName: string, arr?: boolean, types: string[] = [], typeString = ""): string {
     if (typeString.length == 0) {
         typeString = fieldName;
@@ -148,27 +115,4 @@ export function inorderWalk(typeDescription: string | { [key: string]: SchemeCol
     }
     types.push(`\"${typeString}\": ${primitive}`);
     return `${fieldName}: ${primitive}`;
-}
-
-// @ts-ignore
-const Scheme1: SchemeCollection = {
-    arr: false,
-    type: {
-        "_id": {arr: false, type: "objectId"},
-        "show_id": {arr: false, type: "string"},
-        "director": {arr: false, type: "string"},
-        "cast": {arr: true, type: "string"},
-        "release_year": {arr: false, type: {"date": {arr: false, type: "date"}}},
-        "description": {arr: false, type: "string"}
-    }
-};
-// @ts-ignore
-const Scheme2: SchemeCollection = {
-    arr: false,
-    type: {
-        duration: {type: {mins: {type: "int"}, seasons: {type: "int"}}},
-        info: {type: {ses: {arr: true, type: "string"}, dur: {arr: true, type: "int"}}},
-        a: {arr: true, type: {b: {type: "int"}}},
-        lol: {type: {ses: {type: {a: {type: "int"}, b: {type: "string"}}}}},
-    }
 }
