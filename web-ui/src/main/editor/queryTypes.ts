@@ -130,15 +130,13 @@ export function inorderWalk(typeDescription: string | { [key: string]: SchemeCol
         typeString = fieldName;
     }
     if (typeof typeDescription != "string") {
-        let upGoingType = "";
         let nestedTypes: string[] = [];
         for (let field of Object.keys(typeDescription)) {
             nestedTypes.push(inorderWalk(typeDescription[field].type, field, typeDescription[field].arr,
                 types, `${typeString}.${field}`));
         }
-        types.push(`\"${typeString}\": {${nestedTypes.join(",")}}`);
-        upGoingType = `${fieldName}: {${nestedTypes.join(",")}}`;
-        return upGoingType;
+        types.push(`\"${typeString}\": {${nestedTypes.join(",")}}${arr ? "[]" : ""}`);
+        return `${fieldName}: {${nestedTypes.join(",")}}${arr ? "[]" : ""}`;
     }
     let primitive: string = "";
     if (typeDescription == "string") {
