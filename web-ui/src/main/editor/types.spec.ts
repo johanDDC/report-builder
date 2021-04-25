@@ -1,4 +1,4 @@
-import {inorderWalk, SchemeCollection} from "./queryTypes";
+import {constructSortRules, inorderWalk, SchemeCollection} from "./queryTypes";
 import {expect} from 'chai';
 import 'mocha';
 
@@ -43,15 +43,22 @@ let realScheme: SchemeCollection = {
     type: {
         "_id": {type: "string"},
         "show_id": {type: "string"},
+        "type": {type: "string"},
+        "title": {type: "string"},
         "director": {type: "string"},
         "cast": {arr: true, type: "string"},
-        "release_date": {type: {"date": {type: "string"}}},
+        "country": {type: "string"},
+        "date_added": {type: {"date": {type: "string"}}},
+        "release_year": {type: "int"},
+        "rating": {type: "string"},
+        "duration": {type: {seasons: {type: "int"}, mins: {type: "int"}}},
+        "listed_in": {arr: true, type: "string"},
         "description": {type: "string"},
     }
 }
 
 describe("types", () => {
-    it("primitives", () => {
+    it("primitives types", () => {
         let types = [];
         inorderWalk("int", "int", false, types);
         inorderWalk("string", "string", false, types);
@@ -59,14 +66,14 @@ describe("types", () => {
         inorderWalk("long", "long", false, types);
         inorderWalk("bool", "bool", false, types);
         expect(types.toString()).eq([
-                "\"int\": QPrimitiveField<number>",
-                "\"string\": QPrimitiveField<string>",
-                "\"double\": QPrimitiveField<number>",
-                "\"long\": QPrimitiveField<number>",
-                "\"bool\": QPrimitiveField<boolean>",
-            ].toString());
+            "\"int\": QPrimitiveField<number>",
+            "\"string\": QPrimitiveField<string>",
+            "\"double\": QPrimitiveField<number>",
+            "\"long\": QPrimitiveField<number>",
+            "\"bool\": QPrimitiveField<boolean>",
+        ].toString());
     });
-    it('arrays', function () {
+    it('arrays types', function () {
         let types = [];
         inorderWalk({
             intArr: {arr: true, type: "int"},
@@ -97,12 +104,17 @@ describe("types", () => {
             "\"a\": {b: QPrimitiveField<number>,c: QPrimitiveField<string>}[]",
         ].toString());
     });
-    it('multidimensional arrays', function () {
+    it('multidimensional arrays types', function () {
         expect.fail();
         // TODO TBA
     });
     it('different mongo types', function () {
         expect.fail();
         // TODO TBA
+    });
+    it('sort rules', function () {
+        let rules = [];
+        constructSortRules(lolScheme.type["lol"].type, "lol", rules);
+        expect(rules.toString()).eq('{"lol": 1 | -1},{"lol.a": 1 | -1},{"lol.a.b": 1 | -1},{"lol.a.b.b1": 1 | -1},{"lol.a.c": 1 | -1},{"lol.a.c.b2": 1 | -1}');
     });
 });

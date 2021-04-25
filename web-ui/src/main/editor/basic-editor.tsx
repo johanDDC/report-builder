@@ -6,6 +6,7 @@ import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {ReportEditorController} from "./reportEditor";
+import {SchemeCollection, typesGenerator} from "./queryTypes";
 
 const messagesSource = [
     "const messages = {",
@@ -133,36 +134,32 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-let tYpe = 'declare type Columns = "show_id" | "country" | "cast" | "director" | "release_date" | "duration" | "description";\n' +
-    'declare type MongoQueryRules = {};\n' +
-    '\n' +
-    'declare type MongoProjection = {\n' +
-    '    elemMatch: string;\n' +
-    '    exclude: Columns[];\n' +
-    '    excludeId: boolean;\n' +
-    '    include: Columns[];\n' +
-    '    slice: {\n' +
-    '        fieldName: Columns,\n' +
-    '        skip?: number,\n' +
-    '        limit: number,\n' +
-    '    };\n' +
-    '};\n' +
-    'declare type MongoSortRules = {};\n' +
-    'declare namespace api {\n' +
-    '    function query(query: MongoQueryRules, context: any,\n' +
-    '                   projection?: MongoProjection, limit?: number,\n' +
-    '                   offset?: number, sort?: MongoSortRules);\n' +
-    '\n' +
-    '    function table(data: any[], headColumns?: Columns[]);)\n' +
-    '}';
+const realScheme: SchemeCollection = {
+    type: {
+        "_id": {type: "string"},
+        "show_id": {type: "string"},
+        "type": {type: "string"},
+        "title": {type: "string"},
+        "director": {type: "string"},
+        "cast": {arr: true, type: "string"},
+        "country": {type: "string"},
+        "date_added": {type: {"date": {type: "string"}}},
+        "release_year": {type: "int"},
+        "rating": {type: "string"},
+        "duration": {type: {seasons: {type: "int"}, mins: {type: "int"}}},
+        "listed_in": {arr: true, type: "string"},
+        "description": {type: "string"},
+    }
+}
 
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
     const editor = ReportEditorController.use()
+    console.log(typesGenerator(realScheme));
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
-        editor.setApiExtension('api', tYpe, null)
+        editor.setApiExtension('api', typesGenerator(realScheme), null)
         editor.controller.codeText = code
     }, [code])
 
