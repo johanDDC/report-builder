@@ -79,16 +79,32 @@ export function typesGenerator(scheme: SchemeCollection) {
         "    { \"$gt\": T } | { \"$gte\": T } | { \"$lt\": T } | { \"$lte\": T };\n" +
         "type Q_id = { \"_id\": Qobjid<string> };\n";
     let fields = Object.keys(scheme.type);
+    let typesNames = [];
+    let sortRules = [];
     for (let field of fields) {
         let currentType: SchemeCollection = scheme.type[field];
         // let constructedType = constuctType(currentType.type, currentType.arr, field).map(val => {
         //     val = "\"" + val;
         //     return `{${val}}`;
         // }).join("|");
-        let types :string[] = [];
-        inorderWalk(currentType.type, field, currentType.arr, types)
+        let types: string[] = [];
+        let currentSortRules = [];
+        inorderWalk(currentType.type, field, currentType.arr, types);
+        constructSortRules(currentType.type, field, currentSortRules);
         d_ts += `type Q_${field} = ${types.map(val => `{${val}}`).join("|")};\n`;
+        console.log(currentSortRules);
+        sortRules = sortRules.concat(currentSortRules);
+        typesNames.push(`Q_${field}`);
     }
+    d_ts += `type MongoQueryRules = Partial<${typesNames.join("|")}>;\n`;
+    d_ts += `type MongoSortRules = Partial<${sortRules.join("|")}>;\n`
+    d_ts += "declare namespace api {\n" +
+        "     function query(query: MongoQueryRules, context: any,\n" +
+        "                    projection?: object, limit?: number,\n" +
+        "                    offset?: number, sort?: MongoSortRules): any[];\n" +
+        "\n" +
+        "    function table(data: any[], headColumns?: Columns[]);\n" +
+        "}";
     return d_ts;
 }
 
@@ -115,4 +131,13 @@ export function inorderWalk(typeDescription: string | { [key: string]: SchemeCol
     }
     types.push(`\"${typeString}\": ${primitive}`);
     return `${fieldName}: ${primitive}`;
+}
+
+export function constructSortRules(typeDescription: string | { [key: string]: SchemeCollection }, fieldName: string, types: string[] = []): void {
+    types.push(`{\"${fieldName}\": 1 | -1}`);
+    if (typeof typeDescription != "string") {
+        for (let field of Object.keys(typeDescription)) {
+            constructSortRules(typeDescription[field].type, `${fieldName}.${field}`, types);
+        }
+    }
 }
