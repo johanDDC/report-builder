@@ -6,7 +6,7 @@ import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {ReportEditorController} from "./reportEditor";
-import {SchemeCollection, typesGenerator} from "./queryTypes";
+import {queryBuildersGenerator, SchemeCollection, typesGenerator} from "./queryTypes";
 
 const messagesSource = [
     "const messages = {",
@@ -159,7 +159,10 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     console.log(typesGenerator(realScheme));
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
-        editor.setApiExtension('api', typesGenerator(realScheme), null)
+        editor.setApiExtension('api', typesGenerator(realScheme), null);
+        editor.setApiExtension('builder', queryBuildersGenerator({
+            type: {a: {type: "string"}, b: {type: "int"}, c: {type: "date"}}
+        }), null);
         editor.controller.codeText = code
     }, [code])
 

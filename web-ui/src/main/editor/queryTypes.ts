@@ -141,3 +141,97 @@ export function constructSortRules(typeDescription: string | { [key: string]: Sc
         }
     }
 }
+
+function mapMongoTypes(mongoType: string) {
+    if (mongoType == "int" || mongoType == "long" || mongoType == "double" || mongoType == "float") {
+        return "number";
+    }
+    if (mongoType == "string") {
+        return "string";
+    }
+    if (mongoType == "bool") {
+        return "boolean";
+    }
+}
+
+declare type MongoQueryRules = object;
+
+
+// type builderOptions = {
+//     greater: any,
+//     less: any,
+// };
+
+// class Collection {
+//     private static scheme: SchemeCollection = {
+//         type: {a: {type: "string"}, b: {type: "int"}, c: {type: "date"}}
+//     };
+//
+//     private static query: MongoQueryRules = {};
+//
+//     static a(...options: string[] | builderOptions[]) {
+//         if (typeof options[0] != "string") {
+//             this.query["a"] = {"$gt": options[0].greater, "$lt": options[0].less};
+//         } else if (options.length > 1) {
+//             this.query["a"] = {"$in": options};
+//         } else {
+//             this.query["a"] = {"a": options[0]};
+//         }
+//         return this;
+//     }
+//
+//     static b(...options: number[] | builderOptions[]) {
+//         if (typeof options[0] != "number") {
+//             this.query["a"] = {"$gt": options[0].greater, "$lt": options[0].less};
+//         } else if (options.length > 1) {
+//             this.query["a"] = {"$in": options};
+//         } else {
+//             this.query["a"] = {"a": options[0]};
+//         }
+//         return this;
+//     }
+//
+//     static query() {
+//         // api.query(this.query);
+//         this.query = {};
+//     }
+// }
+//
+// Collection.a('abc');
+// Collection.a('A', 'B');
+// Collection.a({greater: 10, less: 100})
+
+export function queryBuildersGenerator(scheme: SchemeCollection) {
+    let builderExtension = "" +
+        "type builderOptions = {\n" +
+        "    greater: any,\n" +
+        "    less: any,\n" +
+        "};\n" +
+        "class Collection {\n" +
+        "\n" +
+        "    private static queryObj: MongoQueryRules = {};\n";
+    for (let field of Object.keys(scheme.type)) {
+        let fieldType = mapMongoTypes(scheme.type[field].type);
+        let method =
+            `static ${field}(...options: ${fieldType}[] | builderOptions[]) {
+                if (typeof options[0] != "${fieldType}") {
+                    this.queryObj["${field}"] = {"$gt": options[0].greater, "$lt": options[0].less};
+                } else if (options.length > 1) {
+                    this.queryObj["${field}"] = {"$in": options};
+                } else {
+                    this.queryObj["${field}"] = {"${field}": options[0]};
+                }
+                return this;
+            }`;
+
+        builderExtension += method;
+    }
+    builderExtension +=
+        `static query() {
+            api.query(this.queryObj);
+            this.queryObj = {};
+        }`;
+    builderExtension += "}";
+    console.log(builderExtension);
+    return builderExtension;
+}
