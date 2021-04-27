@@ -45,17 +45,16 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
     }
 }
 
-function downloadCSV(rows: any[], columns?: string[]) {
+export function downloadCSV(fileName: string, rows: any[], columns?: string[]) {
+    if (fileName.indexOf('.') < 0) fileName = fileName + '.csv'
     if (columns == undefined) {
         columns = Object.keys(rows[0]).filter(e => e != "_id");
     }
-    console.log(formColumns(columns));
     let csv = toCSV(rows, formColumns(columns));
-    console.log(csv.slice(0, 3000));
     let downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
-    downloader.download = 'report.csv';
+    downloader.download = fileName;
     downloader.click();
 
     function formColumns<T>(header: string[]): { header: string, renderer: (t: T) => string }[] {
@@ -76,7 +75,15 @@ function downloadCSV(rows: any[], columns?: string[]) {
     }
 }
 
-function Table(props: { rows: any[], headColumns?: string[] }) {
+export function formatFilename(name: string, date: Date) {
+    const FILE_DATE_FORMAT = [{month: 'short'}, {day: '2-digit'}, {hour: '2-digit', hour12: false}, {minute: '2-digit'}]
+        .map(f => new Intl.DateTimeFormat('en-US', f))
+    let parts = FILE_DATE_FORMAT.map(f => f.format(date));
+    parts = [name, ...parts]
+    return parts.join('_')
+}
+
+export function Table(props: { rows: any[], headColumns?: string[] }) {
     if (props.rows.length == 0) {
         return null;
     }
@@ -203,7 +210,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             Run in worker
         </button>
         <button
-            onClick={() => downloadCSV(data)}
+            onClick={() => downloadCSV(formatFilename('report', execution.startedOn), data)}
             disabled={data.length == 0}>
             Download CSV
         </button>
@@ -217,7 +224,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
         </label>
         <MaxRowsTextarea/>
         {showConsole ?
-            <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages} startMillis={log.startMillis}
+            <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages}
                                onReport={() => setShowConsole(false)}/>
             : <Table rows={data} headColumns={headColumns}/>
         }

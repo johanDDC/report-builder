@@ -48,6 +48,11 @@ export namespace Messages {
         readonly type: string
     }
 
+    export function sendMessage(message: Base) {
+        // @ts-ignore
+        postMessage(message)
+    }
+
     /** State-change message */
     export interface State extends Base {
         readonly running: boolean
@@ -132,8 +137,7 @@ export class ReportAPI {
     }
 
     logException(exception: any) {
-        // @ts-ignore
-        postMessage(Messages.exception(exception))
+        Messages.sendMessage(Messages.exception(exception))
     }
 
     breakpoint() {
@@ -142,26 +146,24 @@ export class ReportAPI {
     }
 
     private static sendDebugMessage(text: string, problem: boolean) {
-        // @ts-ignore
-        postMessage({
+        Messages.sendMessage({
             type: Messages.TYPE_DEBUG,
             problem,
             text
-        })
+        } as Messages.Debug)
     }
 
     table(data: Array<JSON>, name?: string, headColumns?: string[]): void {
         this.configure(headColumns);
         const id = this.reportId++
         if (!name) name = 'Report #' + id
-        // @ts-ignore
-        postMessage({
+        Messages.sendMessage({
             type: Messages.TYPE_REPORT,
             name: name,
             id: id,
             data: data,
             headColumns: headColumns,
-        });
+        } as Messages.Report);
     }
 
     configure(headColumns?: string[]) {

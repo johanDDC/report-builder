@@ -29,7 +29,6 @@ export interface Message {
 export class Collector {
   private _execution: Execution
   private _unsubscribe: () => void
-  private _startMillis: number = 0
   private _lastMessages: Message[]
 
   constructor(private readonly _setMessages: Dispatch<SetStateAction<Message[]>>) {
@@ -52,11 +51,8 @@ export class Collector {
     this._setMessages([])
     this._execution = exec
     this._unsubscribe = exec.listenMessages(msg => this.onMessage(msg))
-    this._startMillis = new Date().getTime()
     this.onMessage(exec.state)
   }
-
-  get startMillis(): number { return this._startMillis }
 
   private unsubscribe() {
     if (this._unsubscribe) {
@@ -67,7 +63,7 @@ export class Collector {
 
   private onMessage(msg: Messages.Base) {
     let message: Message
-    const elapsed = new Date().getTime() - this._startMillis
+    const elapsed = new Date().getTime() - this._execution.startedOn.getTime()
     switch (msg.type) {
       case Messages.TYPE_STATE: message = Collector.onStateMessage(elapsed, msg as Messages.State); break
       case Messages.TYPE_REPORT: message = Collector.onReportMessage(elapsed, msg as Messages.Report); break
@@ -120,7 +116,6 @@ export type MessageCssType = {
 
 export interface ConsoleProps extends React.HTMLAttributes<HTMLDivElement> {
   messages: Message[],
-  startMillis: number,
   /** Calls this callback when the user clicks a report link */
   onReport?: (id: number) => void
   /** Custom message renderer */
@@ -179,7 +174,7 @@ export function LogMessage({message, onReport}: LogMessageProps) {
   const report = message.report;
   if (report) {
     let reportName = !onReport ? report.name :
-        <a onClick={(e) => {
+        <a href='' onClick={(e) => {
           e.preventDefault();
           onReport(report.id)
         }}>{report.name}</a>;
@@ -204,7 +199,7 @@ export function LogMessage({message, onReport}: LogMessageProps) {
   return message.text
 }
 
-export function Component({messages, startMillis, msgClasses, onReport, MessageBody, ...divProps}: ConsoleProps) {
+export function Component({messages, msgClasses, onReport, MessageBody, ...divProps}: ConsoleProps) {
   if (!MessageBody) MessageBody = LogMessage as RComponent<LogMessageProps>
   return <div {...divProps}>
     {messages.map((msg, index) => {
