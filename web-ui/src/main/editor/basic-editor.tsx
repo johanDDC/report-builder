@@ -6,7 +6,13 @@ import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {ReportEditorController} from "./reportEditor";
-import {queryBuildersGenerator, SchemeCollection, typesGenerator} from "./queryTypes";
+import {
+    Decimal, DecimalDeclaration, DecimalImplementation,
+    parseType,
+    queryBuildersGenerator,
+    SchemeCollection,
+    typesGenerator
+} from "./queryTypes";
 
 const messagesSource = [
     "const messages = {",
@@ -51,9 +57,7 @@ function downloadCSV(rows: any[], columns?: string[]) {
     if (columns == undefined) {
         columns = Object.keys(rows[0]).filter(e => e != "_id");
     }
-    console.log(formColumns(columns));
     let csv = toCSV(rows, formColumns(columns));
-    console.log(csv.slice(0, 3000));
     var downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
@@ -97,13 +101,7 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
             let row = [];
             let rowId = 0;
             for (let field of columns) {
-                let elem;
-                if (obj[field] instanceof Object) {     // obj[field] == undefined ?
-                    elem = JSON.stringify(obj[field]);
-                } else {
-                    elem = obj[field];
-                }
-                row.push(<td key={rowId++}>{elem}</td>);
+                row.push(<td key={rowId++}>{stringifyElem(obj[field])}</td>);
             }
             return <tr key={key}>{row}</tr>
         })}
@@ -116,6 +114,24 @@ function Table(props: { rows: any[], headColumns?: string[] }) {
         </tr>
         </thead>
     </table>;
+
+    function stringifyElem(record: null | object) {
+        if (record == null) {
+            return null;
+        }
+        let elem = parseType(record);
+        if (elem == record && record instanceof Object) {     // obj[field] == undefined ?
+            return JSON.stringify(record);
+        } else {
+            if (elem instanceof Decimal) {
+                return elem.asString();
+            } else if (elem instanceof Date) {
+                return elem.toLocaleDateString();
+            } else if (elem != null) {
+                return record.toString();
+            }
+        }
+    }
 }
 
 function MaxRowsTextarea() {
@@ -136,19 +152,20 @@ function MaxRowsTextarea() {
 
 const realScheme: SchemeCollection = {
     type: {
-        "_id": {type: "string"},
+        "_id": {type: "objectId"},
         "show_id": {type: "string"},
         "type": {type: "string"},
         "title": {type: "string"},
         "director": {type: "string"},
         "cast": {arr: true, type: "string"},
         "country": {type: "string"},
-        "date_added": {type: {"date": {type: "string"}}},
-        "release_year": {type: "int"},
+        "date_added": {type: "datetime"},
+        "release_year": {type: "int32"},
         "rating": {type: "string"},
-        "duration": {type: {seasons: {type: "int"}, mins: {type: "int"}}},
+        "duration": {type: {seasons: {type: "int32"}, mins: {type: "int32"}}},
         "listed_in": {arr: true, type: "string"},
         "description": {type: "string"},
+        "dec": {type: "decimal128"}
     }
 }
 
@@ -156,13 +173,13 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
     const editor = ReportEditorController.use()
-    console.log(typesGenerator(realScheme));
+    let [buildersCode, buildersTypes] = queryBuildersGenerator(realScheme, "Collection")
+    // @ts-ignore
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
+        editor.setApiExtension("decimal", DecimalDeclaration, DecimalImplementation);
         editor.setApiExtension('api', typesGenerator(realScheme), null);
-        editor.setApiExtension('builder', queryBuildersGenerator({
-            type: {a: {type: "string"}, b: {type: "int"}, c: {type: "date"}}
-        }), null);
+        editor.setApiExtension('builder', buildersTypes, buildersCode);
         editor.controller.codeText = code
     }, [code])
 
@@ -188,7 +205,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.getWholeReportCode()).then(message => {
+            onClick={() => workerManager.runCode(editor.getWholeReportCode(), realScheme).then(message => {
                 setData(message.data.data);
                 setHeadColumns(message.data.headColumns);
             })}>

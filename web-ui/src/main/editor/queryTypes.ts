@@ -1,74 +1,3 @@
-// declare type Columns = "show_id" | "country" | "cast" | "director" | "release_date" | "duration" | "description";
-//
-// type MongoTypes = {
-//     object: "object",
-//     string: "string",
-//     double: "number",
-//     bool: "boolean",
-//     int: "number",
-//     long: "number",
-// }
-//
-// declare type MongoQueryOperator<T> =
-//     { "$eq": T } | { "$ne": T } |
-//     { "$in": T[] } | { "$nin": T[] } |
-//     { "$gt": T } | { "$gte": T } | { "$lt": T } | { "$lte": T };
-//
-// declare type MongoQueryRule;
-//
-// declare type MongoProjection = {
-//     elemMatch: string;
-//     exclude: Columns[];
-//     excludeId: boolean;
-//     include: Columns[];
-//     slice: {
-//         fieldName: Columns,
-//         skip?: number,
-//         limit: number,
-//     };
-// };
-//
-// declare type MongoSortRules = {};
-//
-// declare namespace api {
-//     function query(query: MongoQueryRule, context: any,
-//                    projection?: MongoProjection, limit?: number,
-//                    offset?: number, sort?: MongoSortRules): any[];
-//
-//     function table(data: any[], headColumns?: Columns[]);
-// }
-
-// type anyField<T extends string> = Partial<{ [f in T]: MongoQueryOperator<string | number> }>
-// type anyQ<T extends string> = anyField<T> | { and: anyQ<T>[] }
-//
-//
-
-// type QPrimitiveField<T> = {'$eq': T} | {'$gt': T}
-// type Q1 = {f1: QPrimitiveField<string>}
-// // type Q2 = {f2: QPrimitiveField<number>}
-// type Q2 = {f2: {'$eq': number}}
-// type Qfield = Q1 | Q2;
-// type genQall<T> = {and: genQall<T>[]} | T
-// type Qall = genQall<Qfield>
-//
-// const q1: Qall = {f1: {$eq: '11'}, f2: {$gt: 33}}
-// const q2: Qall = {and: [{f1: {$eq: '11'}}, {f2: {$gt: 33}}]}
-// type anyField<T extends string> = Partial<{ [f in T]: MongoQueryOperator<string | number> }>
-// type anyQ<T extends string> = anyField<T> | { and: anyQ<T>[] }
-//
-// const qq: anyField<'_id' | 'a'> = {}
-
-
-// type Qobjid<T> = { "$eq": T } | T;
-// type QPrimitiveField<T> = Qobjid<T> | { '$gt': T };
-// type Q_id = { "_id": Qobjid<string> }
-// type Qs = { s: QPrimitiveField<string> };
-// type Qn = { n: QPrimitiveField<number> };
-// type Qfield = Q_id | Qs | Qn;
-// type genQall<T> = { and: genQall<T>[] } | T
-// type Qall = genQall<Qfield>
-
-// const query: Qall = {_id: {$eq: "1111"}, and: [{n: {$gt: 18}}, {s: "loh"}]}
 export type SchemeCollection = { arr?: boolean, type: string | { [key: string]: SchemeCollection } }
 
 // @ts-ignore
@@ -83,16 +12,11 @@ export function typesGenerator(scheme: SchemeCollection) {
     let sortRules = [];
     for (let field of fields) {
         let currentType: SchemeCollection = scheme.type[field];
-        // let constructedType = constuctType(currentType.type, currentType.arr, field).map(val => {
-        //     val = "\"" + val;
-        //     return `{${val}}`;
-        // }).join("|");
         let types: string[] = [];
         let currentSortRules = [];
         inorderWalk(currentType.type, field, currentType.arr, types);
         constructSortRules(currentType.type, field, currentSortRules);
         d_ts += `type Q_${field} = ${types.map(val => `{${val}}`).join("|")};\n`;
-        console.log(currentSortRules);
         sortRules = sortRules.concat(currentSortRules);
         typesNames.push(`Q_${field}`);
     }
@@ -121,14 +45,7 @@ export function inorderWalk(typeDescription: string | { [key: string]: SchemeCol
         types.push(`\"${typeString}\": {${nestedTypes.join(",")}}${arr ? "[]" : ""}`);
         return `${fieldName}: {${nestedTypes.join(",")}}${arr ? "[]" : ""}`;
     }
-    let primitive: string = "";
-    if (typeDescription == "string") {
-        primitive = `QPrimitiveField<string${arr ? "[]" : ""}>`;
-    } else if (typeDescription == "int" || typeDescription == "long" || typeDescription == "double") {
-        primitive = `QPrimitiveField<number${arr ? "[]" : ""}>`;
-    } else if (typeDescription == "bool") {
-        primitive = `QPrimitiveField<boolean${arr ? "[]" : ""}>`;
-    }
+    let primitive: string = `QPrimitiveField<${mapMongoTypes(typeDescription)}${arr ? "[]" : ""}>`;
     types.push(`\"${typeString}\": ${primitive}`);
     return `${fieldName}: ${primitive}`;
 }
@@ -143,7 +60,7 @@ export function constructSortRules(typeDescription: string | { [key: string]: Sc
 }
 
 function mapMongoTypes(mongoType: string) {
-    if (mongoType == "int" || mongoType == "long" || mongoType == "double" || mongoType == "float") {
+    if (mongoType == "int32" || mongoType == "int64" || mongoType == "double") {
         return "number";
     }
     if (mongoType == "string") {
@@ -152,86 +69,200 @@ function mapMongoTypes(mongoType: string) {
     if (mongoType == "bool") {
         return "boolean";
     }
+    if (mongoType == "datetime") {
+        return "Date";
+    }
+    if (mongoType == "objectId") {
+        return "string";
+    }
+    if (mongoType == "bin") {
+        return "string";
+    }
+    if (mongoType == "decimal128") {
+        return "Decimal";
+    }
 }
 
-declare type MongoQueryRules = object;
+export function parseType(obj: object) {
+    if (obj["$date"]) {
+        return new Date(obj["$date"]);
+    }
+    if (obj["$numberDecimal"]) {
+        return new Decimal(obj["$numberDecimal"]);
+    }
+    if (obj["$oid"]) {
+        return obj["$oid"];
+    }
+    return obj;
+}
 
-
-// type builderOptions = {
-//     greater: any,
-//     less: any,
-// };
-
-// class Collection {
-//     private static scheme: SchemeCollection = {
-//         type: {a: {type: "string"}, b: {type: "int"}, c: {type: "date"}}
-//     };
-//
-//     private static query: MongoQueryRules = {};
-//
-//     static a(...options: string[] | builderOptions[]) {
-//         if (typeof options[0] != "string") {
-//             this.query["a"] = {"$gt": options[0].greater, "$lt": options[0].less};
-//         } else if (options.length > 1) {
-//             this.query["a"] = {"$in": options};
-//         } else {
-//             this.query["a"] = {"a": options[0]};
-//         }
-//         return this;
-//     }
-//
-//     static b(...options: number[] | builderOptions[]) {
-//         if (typeof options[0] != "number") {
-//             this.query["a"] = {"$gt": options[0].greater, "$lt": options[0].less};
-//         } else if (options.length > 1) {
-//             this.query["a"] = {"$in": options};
-//         } else {
-//             this.query["a"] = {"a": options[0]};
-//         }
-//         return this;
-//     }
-//
-//     static query() {
-//         // api.query(this.query);
-//         this.query = {};
-//     }
-// }
-//
-// Collection.a('abc');
-// Collection.a('A', 'B');
-// Collection.a({greater: 10, less: 100})
-
-export function queryBuildersGenerator(scheme: SchemeCollection) {
-    let builderExtension = "" +
-        "type builderOptions = {\n" +
-        "    greater: any,\n" +
-        "    less: any,\n" +
+export function queryBuildersGenerator(scheme: SchemeCollection, collectionName: string) {
+    let builderTypes =
+        "type builderOptions<T> = {\n" +
+        "    greater?: T,\n" +
+        "    less?: T,\n" +
         "};\n" +
-        "class Collection {\n" +
+        "declare function isBuilderOptions(obj: object);\n" +
+        `declare class ${collectionName} {
+        constructor();\n`;
+    let builderExtension =
+        "function isBuilderOptions(obj) {\n" +
+        "    if (obj[\"greater\"] || obj[\"less\"]) {\n" +
+        "        return true;\n" +
+        "    }\n" +
+        "    return false;\n" +
+        "}\n" +
+        "function mapToMongo(obj, type) {\n" +
+        "    type = type.substring(type.indexOf('<') + 1, type.indexOf('>'));\n" +
+        "    if (type == \"_id\") {\n" +
+        "        return {\"$oid\": obj};\n" +
+        "    } else if (type == \"Decimal\") {\n" +
+        "        return {\"$numberDecimal\": obj.asString()};\n" +
+        "    } else if (type == \"Date\") {\n" +
+        "        return {\"$date\": obj.getTime()};\n" +
+        "    } else {\n" +
+        "        return obj;\n" +
+        "    }\n" +
+        "}\n\n" +
+        `class ${collectionName} {\n` +
         "\n" +
-        "    private static queryObj: MongoQueryRules = {};\n";
+        "constructor(queryObj) {\n" +
+        "        this.queryObj = queryObj;\n" +
+        "}\n";
     for (let field of Object.keys(scheme.type)) {
-        let fieldType = mapMongoTypes(scheme.type[field].type);
-        let method =
-            `static ${field}(...options: ${fieldType}[] | builderOptions[]) {
-                if (typeof options[0] != "${fieldType}") {
-                    this.queryObj["${field}"] = {"$gt": options[0].greater, "$lt": options[0].less};
-                } else if (options.length > 1) {
-                    this.queryObj["${field}"] = {"$in": options};
-                } else {
-                    this.queryObj["${field}"] = {"${field}": options[0]};
-                }
-                return this;
-            }`;
-
-        builderExtension += method;
+        let methods = [];
+        let signatures = [];
+        myInorderWalk(scheme.type[field].type, field, scheme.type[field].arr, methods, signatures);
+        builderExtension += methods.join("\n");
+        builderTypes += signatures.join("\n");
     }
     builderExtension +=
-        `static query() {
-            api.query(this.queryObj);
-            this.queryObj = {};
-        }`;
-    builderExtension += "}";
-    console.log(builderExtension);
-    return builderExtension;
+        `query() {
+            api.table(api.query(this.queryObj, {fixFields: false}));
+        }\n}`;
+    builderTypes +=
+        `query();\n}`;
+    console.log(builderTypes);
+    return [builderExtension, builderTypes];
+
+    function myInorderWalk(typeDescription: string | { [key: string]: SchemeCollection }, field: string, arr: boolean, methods = [], signatures = []) {
+        let types = [];
+        inorderWalk(typeDescription, field, arr, types);
+        for (let typestring of types) {
+            let typeQuery = typestring.substring(0, typestring.indexOf(':')).replace(/"/g, "");
+            let typeField = typeQuery.replace('.', '_');
+            let typeType = typestring.substring(typestring.indexOf(': ') + 2);
+            signatures.push(`${typeField}(...options: Partial<${typeType}>[] | builderOptions<Partial<${typeType}>>[]) : ${collectionName};\n`);
+            signatures.push(`static ${typeField}(...options: Partial<${typeType}>[] | builderOptions<Partial<${typeType}>>[]) : ${collectionName};\n`);
+            if (typeField == "_id"){
+                typeType = "<_id>";
+            }
+            methods.push(`${typeField}(...options){
+                    if (isBuilderOptions(options[0])) {
+                        let query = {};
+                        if (options[0].greater) {
+                            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
+                        }
+                        if (options[0].less) {
+                            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
+                        }
+                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": query});
+                    } else if (options.length > 1) {
+                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
+                    } else {
+                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
+                    }
+                }\n`);
+            methods.push(`static ${typeField}(...options){
+                    if (isBuilderOptions(options[0])) {
+                        let query = {};
+                        if (options[0].greater) {
+                            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
+                        }
+                        if (options[0].less) {
+                            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
+                        }
+                        return new ${collectionName}({\"${typeQuery}\": query});
+                    } else if (options.length > 1) {
+                        return new ${collectionName}({\"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
+                    } else {
+                        return new ${collectionName}({\"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
+                    }
+                }\n`);
+        }
+    }
+}
+
+export class Decimal {
+    private data: number;
+
+    constructor(decimal: number | string) {
+        if (typeof decimal == "number") {
+            this.data = decimal;
+        } else {
+            this.data = Number(decimal);
+        }
+    }
+
+    asString() {
+        return this.data.toString();
+    }
+
+    asNumber() {
+        return this.data;
+    }
+}
+
+export const DecimalDeclaration = "class Decimal {\n" +
+    "    private data: number;\n" +
+    "\n" +
+    "    constructor(decimal: number | string) {\n" +
+    "        if (typeof decimal == \"number\") {\n" +
+    "            this.data = decimal;\n" +
+    "        } else {\n" +
+    "            this.data = Number(decimal);\n" +
+    "        }\n" +
+    "    }\n" +
+    "\n" +
+    "    asString() {\n" +
+    "        return this.data.toString();\n" +
+    "    }\n" +
+    "\n" +
+    "    asNumber() {\n" +
+    "        return this.data;\n" +
+    "    }\n" +
+    "}";
+
+export const DecimalImplementation = "class Decimal {\n" +
+    "    constructor(decimal) {\n" +
+    "        if (typeof decimal == \"number\") {\n" +
+    "            this.data = decimal;\n" +
+    "        } else {\n" +
+    "            this.data = Number(decimal);\n" +
+    "        }\n" +
+    "    }\n" +
+    "\n" +
+    "    asString() {\n" +
+    "        return this.data.toString();\n" +
+    "    }\n" +
+    "\n" +
+    "    asNumber() {\n" +
+    "        return this.data;\n" +
+    "    }\n" +
+    "}"
+
+export function getLocalScheme(scheme: string | { [key: string]: SchemeCollection }): SchemeCollection {
+    let localScheme: { [k: string]: any } = {};
+    for (let field of Object.keys(scheme)) {
+        Object.defineProperty(localScheme, field, {value: {}});
+        if (scheme[field].arr) {
+            localScheme[field].arr = true;
+        }
+        if (typeof scheme[field].type == "string") {
+            localScheme[field].type = mapMongoTypes(scheme[field].type);
+        } else {
+            localScheme[field].type = getLocalScheme(scheme[field].type);
+        }
+    }
+    return {type: localScheme};
 }

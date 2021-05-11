@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let content = <>
         <HelloWorld/>
         <BasicExecutor/>
-        <BasicEditor workerManager={workerManager} code={"A() // Will fail here until the lib is included\napi.table(api.query({}, {}, {_id: 0}, 20, 10, {country: -1}));"}/>
+        <BasicEditor workerManager={workerManager} code={"Collection.release_year({greater: 2019, less: 2021}).query()"}/>
         <ServerController/>
     </>
     ReactDOM.render(content, document.querySelector('#root'));
