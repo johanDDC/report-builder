@@ -158,37 +158,37 @@ export function queryBuildersGenerator(scheme: SchemeCollection, collectionName:
                 typeType = "<_id>";
             }
             methods.push(`${typeField}(...options){
-                    if (isBuilderOptions(options[0])) {
-                        let query = {};
-                        if (options[0].greater) {
-                            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
-                        }
-                        if (options[0].less) {
-                            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
-                        }
-                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": query});
-                    } else if (options.length > 1) {
-                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
-                    } else {
-                        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
-                    }
-                }\n`);
+    if (isBuilderOptions(options[0])) {
+        let query = {};
+        if (options[0].greater) {
+            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
+        }
+        if (options[0].less) {
+            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
+        }
+        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": query});
+    } else if (options.length > 1) {
+        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
+    } else {
+        return new ${collectionName}({...this.queryObj, \"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
+    }
+}\n`);
             methods.push(`static ${typeField}(...options){
-                    if (isBuilderOptions(options[0])) {
-                        let query = {};
-                        if (options[0].greater) {
-                            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
-                        }
-                        if (options[0].less) {
-                            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
-                        }
-                        return new ${collectionName}({\"${typeQuery}\": query});
-                    } else if (options.length > 1) {
-                        return new ${collectionName}({\"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
-                    } else {
-                        return new ${collectionName}({\"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
-                    }
-                }\n`);
+    if (isBuilderOptions(options[0])) {
+        let query = {};
+        if (options[0].greater) {
+            query["$gt"] = mapToMongo(options[0].greater, "${typeType}");
+        }
+        if (options[0].less) {
+            query["$lt"] = mapToMongo(options[0].less, "${typeType}");
+        }
+        return new ${collectionName}({\"${typeQuery}\": query});
+    } else if (options.length > 1) {
+        return new ${collectionName}({\"${typeQuery}\": {"$in": options.map(e => mapToMongo(e, \"${typeType}\"))}});
+    } else {
+        return new ${collectionName}({\"${typeQuery}\": mapToMongo(options[0], \"${typeType}\")});
+    }
+}\n`);
         }
     }
 }

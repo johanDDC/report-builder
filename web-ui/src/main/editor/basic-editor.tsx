@@ -4,7 +4,7 @@ import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
-import {MonacoEditor} from "./monacoController";
+import {EditorController, MonacoEditor} from "./monacoController";
 import {ReportEditorController} from "./reportEditor";
 import {
     Decimal, DecimalDeclaration, DecimalImplementation,
@@ -173,14 +173,19 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
     const editor = ReportEditorController.use()
+    const editorTypes = EditorController.use()
+    const editorCode = EditorController.use()
     let [buildersCode, buildersTypes] = queryBuildersGenerator(realScheme, "Collection")
+    let generatedTypes = typesGenerator(realScheme);
     // @ts-ignore
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
         editor.setApiExtension("decimal", DecimalDeclaration, DecimalImplementation);
-        editor.setApiExtension('api', typesGenerator(realScheme), null);
+        editor.setApiExtension('api', generatedTypes, null);
         editor.setApiExtension('builder', buildersTypes, buildersCode);
-        editor.controller.codeText = code
+        editor.controller.codeText = code;
+        editorTypes.codeText = generatedTypes + "\n" + buildersTypes;
+        editorCode.codeText = buildersCode;
     }, [code])
 
     const showCode = React.useCallback(() => {
@@ -217,6 +222,10 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             Download CSV
         </button>
         <MaxRowsTextarea/>
+        <div style={{width: "100%", display: "flex", flexDirection: "row", height: "400px"}}>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorTypes}/>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='javascript' controller={editorCode}/>
+        </div>
         <Table rows={data} headColumns={headColumns}/>
     </>;
 }
