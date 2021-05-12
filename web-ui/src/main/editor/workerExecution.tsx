@@ -7,6 +7,16 @@ export class WorkerManager {
     private _currentExecution: ExecutionImpl
     private _disposed = false
 
+    // runCode(code: string, scheme: SchemeCollection): Promise<MessageEvent> {
+    //     let worker = this.getWorker();
+    //     if (worker == null) {
+    //         alert("Problem with worker initialization");
+    //         return;
+    //     }
+    //     worker.postMessage({code: code, scheme: scheme});
+    //     return new Promise(resolve => worker.onmessage = (response) => resolve(response));
+    // }
+
     constructor(private readonly _workerUrl: string) {}
 
     /**
@@ -64,7 +74,7 @@ export interface Execution {
     readonly startedOn: Date
 
     /** Starts execution of the report */
-    start(code: string)
+    start(code: string, scheme: SchemeCollection)
 
     /** Terminates this execution */
     terminate(reason: string)
@@ -91,10 +101,10 @@ class ExecutionImpl implements Execution {
 
     get state() { return this._state }
 
-    start(code: string) {
+    start(code: string, scheme: SchemeCollection) {
         if (!this._worker) throw Error('Cannot start: has no worker')
         if (!this._state.running) throw Error('Cannot start: already done')
-        this._worker.postMessage(code)
+        this._worker.postMessage({code: code, scheme: scheme});
     }
 
     terminate(reason: string) {

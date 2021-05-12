@@ -3,10 +3,10 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import {Execution, WorkerManager} from "./workerExecution";
+import {Execution} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
 import {WorkerManager} from "./workerExecution";
-import {EditorController, MonacoEditor} from "./monacoController";
+import {EditorController} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 import {
     Decimal, DecimalDeclaration, DecimalImplementation,
@@ -187,12 +187,6 @@ const realScheme: SchemeCollection = {
     }
 }
 
-const JS_SLEEP =
-`function sleep(t) {
-  const start = Date.now();
-  while (Date.now() - start < t);
-}`
-
 const CONSOLE_CLASSES: MessageCssType = {
     [Console.TYPE_INFO]: 'console-info',
     [Console.TYPE_SYS]: 'console-sys',
@@ -259,7 +253,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                 }, Messages.TYPE_REPORT)
                 exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
                 log.setExecution(exec)
-                exec.start(code)
+                exec.start(code, realScheme);
             }}>
             Run in worker
         </button>
@@ -281,7 +275,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorTypes}/>
             <MonacoEditor style={{height: "100%", width: "50%"}} language='javascript' controller={editorCode}/>
         </div>
-        <Table rows={data} headColumns={headColumns}/>
+        {/*<Table rows={data} headColumns={headColumns}/>*/}
         {showConsole ?
             <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages}
                                onReport={() => setShowConsole(false)}/>
