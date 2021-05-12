@@ -5,7 +5,7 @@ import * as monaco_loader from '@monaco-editor/loader';
 import {editor} from "monaco-editor/monaco";
 import {WorkerManager} from "./workerExecution";
 import {EditorController, MonacoEditor} from "./monacoController";
-import {ReportEditorController} from "./reportEditor";
+import {MIME, ReportEditorController} from "./reportEditor";
 import {
     Decimal, DecimalDeclaration, DecimalImplementation,
     parseType,
@@ -13,6 +13,8 @@ import {
     SchemeCollection,
     typesGenerator
 } from "./queryTypes";
+import TS = MIME.TS;
+import JS = MIME.JS;
 
 const messagesSource = [
     "const messages = {",
@@ -180,9 +182,9 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     // @ts-ignore
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
-        editor.setApiExtension("decimal", DecimalDeclaration, DecimalImplementation);
+        editor.setApiExtension("decimal", DecimalDeclaration, {mime: TS, text: DecimalImplementation});
         editor.setApiExtension('api', generatedTypes, null);
-        editor.setApiExtension('builder', buildersTypes, buildersCode);
+        editor.setApiExtension('builder', buildersTypes, {mime: JS, text: buildersCode});
         editor.controller.codeText = code;
         editorTypes.codeText = generatedTypes + "\n" + buildersTypes;
         editorCode.codeText = buildersCode;
@@ -201,7 +203,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                     <input type='checkbox' onChange={
                         (e) => {
                             if (e.target.checked)
-                                editor.setApiExtension('lib-A', 'declare function A()', 'function A() {}')
+                                editor.setApiExtension('lib-A', 'declare function A()', {mime: JS, text: 'function A() {}'});
                             else editor.setApiExtension('lib-A', null, null)
                         }}/>
                     function A()
