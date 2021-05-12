@@ -3,6 +3,8 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
+import {Execution, WorkerManager} from "./workerExecution";
+import {MonacoEditor} from "./monacoController";
 import {WorkerManager} from "./workerExecution";
 import {EditorController, MonacoEditor} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
@@ -21,6 +23,11 @@ const messagesSource = [
     "   add: (message : string) => {}",
     "}"
 ].join('\n');
+import {Messages} from "./reportAPI";
+import * as Console from './console'
+import {MessageCssType} from './console'
+// @ts-ignore
+import REPORT_API_TYPES from '!!raw-loader!./types-ReportAPI.d.ts';
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     /* https://tools.ietf.org/html/rfc4180#page-2 */
@@ -55,15 +62,16 @@ export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) 
     }
 }
 
-function downloadCSV(rows: any[], columns?: string[]) {
+export function downloadCSV(fileName: string, rows: any[], columns?: string[]) {
+    if (fileName.indexOf('.') < 0) fileName = fileName + '.csv'
     if (columns == undefined) {
         columns = Object.keys(rows[0]).filter(e => e != "_id");
     }
     let csv = toCSV(rows, formColumns(columns));
-    var downloader = document.createElement('a');
+    let downloader = document.createElement('a');
     downloader.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     downloader.target = '_blank';
-    downloader.download = 'report.csv';
+    downloader.download = fileName;
     downloader.click();
 
     function formColumns<T>(header: string[]): { header: string, renderer: (t: T) => string }[] {
@@ -84,7 +92,15 @@ function downloadCSV(rows: any[], columns?: string[]) {
     }
 }
 
-function Table(props: { rows: any[], headColumns?: string[] }) {
+export function formatFilename(name: string, date: Date) {
+    const FILE_DATE_FORMAT = [{month: 'short'}, {day: '2-digit'}, {hour: '2-digit', hour12: false}, {minute: '2-digit'}]
+        .map(f => new Intl.DateTimeFormat('en-US', f))
+    let parts = FILE_DATE_FORMAT.map(f => f.format(date));
+    parts = [name, ...parts]
+    return parts.join('_')
+}
+
+export function Table(props: { rows: any[], headColumns?: string[] }) {
     if (props.rows.length == 0) {
         return null;
     }
@@ -171,15 +187,36 @@ const realScheme: SchemeCollection = {
     }
 }
 
+const JS_SLEEP =
+`function sleep(t) {
+  const start = Date.now();
+  while (Date.now() - start < t);
+}`
+
+const CONSOLE_CLASSES: MessageCssType = {
+    [Console.TYPE_INFO]: 'console-info',
+    [Console.TYPE_SYS]: 'console-sys',
+    [Console.TYPE_ERROR]: 'console-error',
+    [Console.CLASS_ROW]: 'console-row',
+    [Console.CLASS_TIME]: 'console-time',
+    [Console.CLASS_MESSAGE]: 'console-message',
+    [Console.CLASS_EXCEPTION]: 'console-exception',
+}
+
 export function BasicEditor({workerManager, code}: { workerManager: WorkerManager, code: string }) {
     const [data, setData] = React.useState([]);
     const [headColumns, setHeadColumns] = React.useState(undefined);
+    const [execution, setExecution] = React.useState<Execution>(null)
+    const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
     const editorTypes = EditorController.use()
     const editorCode = EditorController.use()
     let [buildersCode, buildersTypes] = queryBuildersGenerator(realScheme, "Collection")
     let generatedTypes = typesGenerator(realScheme);
     // @ts-ignore
+    const log = Console.Collector.use()
+    const [showConsole, setShowConsole] = React.useState(true)
+    const [addLib, setAddLib] = React.useState(true)
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
         editor.setApiExtension("decimal", DecimalDeclaration, {mime: TS, text: DecimalImplementation});
@@ -200,34 +237,55 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             <div style={{height: "100%", width: "50%"}}>
                 <h5>Libraries</h5>
                 <label>
-                    <input type='checkbox' onChange={
-                        (e) => {
-                            if (e.target.checked)
-                                editor.setApiExtension('lib-A', 'declare function A()', {mime: JS, text: 'function A() {}'});
-                            else editor.setApiExtension('lib-A', null, null)
-                        }}/>
-                    function A()
+                    <input type='checkbox' checked={addLib} onChange={
+                        (e) => setAddLib(e.target.checked)}/>
+                    sleep()
                 </label>
             </div>
         </div>
         <button onClick={showCode}>Print code</button>
         <button
-            onClick={() => workerManager.runCode(editor.getWholeReportCode(), realScheme).then(message => {
-                setData(message.data.data);
-                setHeadColumns(message.data.headColumns);
-            })}>
+            onClick={() => {
+                let code = editor.getWholeReportCode();
+                let exec = workerManager.newExecution();
+                setExecution(exec)
+                setData([])
+                setHeadColumns(undefined)
+                setExecState(exec.state)
+                exec.listenMessages(m => {
+                    const msg = m as Messages.Report
+                    setData(msg.data)
+                    setHeadColumns(msg.columns)
+                }, Messages.TYPE_REPORT)
+                exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
+                log.setExecution(exec)
+                exec.start(code)
+            }}>
             Run in worker
         </button>
         <button
-            onClick={() => downloadCSV(data)}
+            onClick={() => downloadCSV(formatFilename('report', execution.startedOn), data)}
             disabled={data.length == 0}>
             Download CSV
         </button>
+        <button onClick={() => execution.terminate("Terminated by the user")}
+                disabled={!execution || !execState || !execState.running}>
+            Terminate
+        </button>
+        <label>
+            Show Console
+            <input type='checkbox' checked={showConsole} onChange={(e) => setShowConsole(e.target.checked)}/>
+        </label>
         <MaxRowsTextarea/>
         <div style={{width: "100%", display: "flex", flexDirection: "row", height: "400px"}}>
             <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorTypes}/>
             <MonacoEditor style={{height: "100%", width: "50%"}} language='javascript' controller={editorCode}/>
         </div>
         <Table rows={data} headColumns={headColumns}/>
+        {showConsole ?
+            <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages}
+                               onReport={() => setShowConsole(false)}/>
+            : <Table rows={data} headColumns={headColumns}/>
+        }
     </>;
 }

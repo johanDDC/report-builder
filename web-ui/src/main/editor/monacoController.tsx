@@ -204,7 +204,7 @@ export class EditorController {
   }
 }
 
-interface EditorProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface EditorProps extends React.HTMLAttributes<HTMLDivElement> {
   /** configured language of the editor */
   language: string
   /**
@@ -239,10 +239,4 @@ export function MonacoEditor({language, controller, ...props}: EditorProps) {
     return () => controller.dispose()
   }, [controller])
   return <div {...props} ref={divRef}/>
-}
-
-export function setRef<T>(ref: React.ForwardedRef<T>, value: T) {
-  if (!ref) return;
-  if (typeof ref === 'function') ref(value)
-  else ref.current = value;
 }
