@@ -1,8 +1,6 @@
 import {Listeners} from "./simpleUtils";
 import {Messages} from "./reportAPI";
 
-import {SchemeCollection} from "./queryTypes";
-
 export class WorkerManager {
     private _currentExecution: ExecutionImpl
     private _disposed = false
@@ -74,7 +72,7 @@ export interface Execution {
     readonly startedOn: Date
 
     /** Starts execution of the report */
-    start(code: string, scheme: SchemeCollection)
+    start(code: string)
 
     /** Terminates this execution */
     terminate(reason: string)
@@ -101,10 +99,10 @@ class ExecutionImpl implements Execution {
 
     get state() { return this._state }
 
-    start(code: string, scheme: SchemeCollection) {
+    start(code: string) {
         if (!this._worker) throw Error('Cannot start: has no worker')
         if (!this._state.running) throw Error('Cannot start: already done')
-        this._worker.postMessage({code: code, scheme: scheme});
+        this._worker.postMessage(code);
     }
 
     terminate(reason: string) {

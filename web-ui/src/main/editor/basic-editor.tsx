@@ -8,13 +8,14 @@ import {MonacoEditor} from "./monacoController";
 import {WorkerManager} from "./workerExecution";
 import {EditorController} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
+// @ts-ignore
 import {
     Decimal, DecimalDeclaration, DecimalImplementation,
     parseType,
     queryBuildersGenerator,
     SchemeCollection,
     typesGenerator
-} from "./queryTypes";
+} from "./types/queryTypes";
 import TS = MIME.TS;
 import JS = MIME.JS;
 
@@ -253,7 +254,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                 }, Messages.TYPE_REPORT)
                 exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
                 log.setExecution(exec)
-                exec.start(code, realScheme);
+                exec.start(code);
             }}>
             Run in worker
         </button>
