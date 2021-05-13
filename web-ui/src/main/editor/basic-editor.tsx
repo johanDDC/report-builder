@@ -3,9 +3,27 @@ import * as React from 'react';
 import * as monaco_loader from '@monaco-editor/loader';
 // @ts-ignore
 import {editor} from "monaco-editor/monaco";
-import {Execution, WorkerManager} from "./workerExecution";
+import {Execution} from "./workerExecution";
 import {MonacoEditor} from "./monacoController";
+import {WorkerManager} from "./workerExecution";
+import {EditorController} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
+// @ts-ignore
+import {
+    Decimal, DecimalDeclaration, DecimalImplementation,
+    parseType,
+    queryBuildersGenerator,
+    SchemeCollection,
+    typesGenerator
+} from "./types/queryTypes";
+import TS = MIME.TS;
+import JS = MIME.JS;
+
+const messagesSource = [
+    "const messages = {",
+    "   add: (message : string) => {}",
+    "}"
+].join('\n');
 import {Messages} from "./reportAPI";
 import * as Console from './console'
 import {MessageCssType} from './console'
@@ -102,13 +120,7 @@ export function Table(props: { rows: any[], headColumns?: string[] }) {
             let row = [];
             let rowId = 0;
             for (let field of columns) {
-                let elem;
-                if (obj[field] instanceof Object) {     // obj[field] == undefined ?
-                    elem = JSON.stringify(obj[field]);
-                } else {
-                    elem = obj[field];
-                }
-                row.push(<td key={rowId++}>{elem}</td>);
+                row.push(<td key={rowId++}>{stringifyElem(obj[field])}</td>);
             }
             return <tr key={key}>{row}</tr>
         })}
@@ -121,6 +133,24 @@ export function Table(props: { rows: any[], headColumns?: string[] }) {
         </tr>
         </thead>
     </table>;
+
+    function stringifyElem(record: null | object) {
+        if (record == null) {
+            return null;
+        }
+        let elem = parseType(record);
+        if (elem == record && record instanceof Object) {     // obj[field] == undefined ?
+            return JSON.stringify(record);
+        } else {
+            if (elem instanceof Decimal) {
+                return elem.asString();
+            } else if (elem instanceof Date) {
+                return elem.toLocaleDateString();
+            } else if (elem != null) {
+                return record.toString();
+            }
+        }
+    }
 }
 
 function MaxRowsTextarea() {
@@ -139,11 +169,24 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-const JS_SLEEP =
-`function sleep(t) {
-  const start = Date.now();
-  while (Date.now() - start < t);
-}`
+const realScheme: SchemeCollection = {
+    type: {
+        "_id": {type: "objectId"},
+        "show_id": {type: "string"},
+        "type": {type: "string"},
+        "title": {type: "string"},
+        "director": {type: "string"},
+        "cast": {arr: true, type: "string"},
+        "country": {type: "string"},
+        "date_added": {type: "datetime"},
+        "release_year": {type: "int32"},
+        "rating": {type: "string"},
+        "duration": {type: {seasons: {type: "int32"}, mins: {type: "int32"}}},
+        "listed_in": {arr: true, type: "string"},
+        "description": {type: "string"},
+        "dec": {type: "decimal128"}
+    }
+}
 
 const CONSOLE_CLASSES: MessageCssType = {
     [Console.TYPE_INFO]: 'console-info',
@@ -161,17 +204,23 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [execution, setExecution] = React.useState<Execution>(null)
     const [execState, setExecState] = React.useState<Messages.State>(Messages.state('Not stater', false))
     const editor = ReportEditorController.use()
+    const editorTypes = EditorController.use()
+    const editorCode = EditorController.use()
+    let [buildersCode, buildersTypes] = queryBuildersGenerator(realScheme, "Collection")
+    let generatedTypes = typesGenerator(realScheme);
+    // @ts-ignore
     const log = Console.Collector.use()
     const [showConsole, setShowConsole] = React.useState(true)
     const [addLib, setAddLib] = React.useState(true)
     React.useEffect(() => {
-        editor.setApiExtension('reportAPI', REPORT_API_TYPES, null) // No harm to set the same content several times
-        editor.controller.codeText = code
+        editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
+        editor.setApiExtension("decimal", DecimalDeclaration, {mime: TS, text: DecimalImplementation});
+        editor.setApiExtension('api', generatedTypes, null);
+        editor.setApiExtension('builder', buildersTypes, {mime: JS, text: buildersCode});
+        editor.controller.codeText = code;
+        editorTypes.codeText = generatedTypes + "\n" + buildersTypes;
+        editorCode.codeText = buildersCode;
     }, [code])
-    React.useEffect(() => {
-        if (addLib) editor.setApiExtension('lib-sleep', 'function sleep(time: number)', {mime: MIME.JS, text: JS_SLEEP})
-        else editor.setApiExtension('lib-sleep', null, null)
-    }, [addLib])
 
     const showCode = React.useCallback(() => {
         alert(editor.getWholeReportCode())
@@ -179,9 +228,9 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
 
     return <>
         <div style={{height: "200px", display: "flex", flexFlow: "row nowrap"}}>
-            <MonacoEditor style={{flexGrow: 1, width: "50%"}} language='typescript' controller={editor.controller}/>
-            <div style={{height: "100%", flexGrow: 0, minWidth: "8em", marginLeft: ".5rem"}}>
-                <h5 style={{margin: ".1em .3em .1em .5em"}}>Libraries</h5>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editor.controller}/>
+            <div style={{height: "100%", width: "50%"}}>
+                <h5>Libraries</h5>
                 <label>
                     <input type='checkbox' checked={addLib} onChange={
                         (e) => setAddLib(e.target.checked)}/>
@@ -205,7 +254,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
                 }, Messages.TYPE_REPORT)
                 exec.listenMessages(m => setExecState(m as Messages.State), Messages.TYPE_STATE)
                 log.setExecution(exec)
-                exec.start(code)
+                exec.start(code);
             }}>
             Run in worker
         </button>
@@ -223,6 +272,11 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
             <input type='checkbox' checked={showConsole} onChange={(e) => setShowConsole(e.target.checked)}/>
         </label>
         <MaxRowsTextarea/>
+        <div style={{width: "100%", display: "flex", flexDirection: "row", height: "400px"}}>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorTypes}/>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='javascript' controller={editorCode}/>
+        </div>
+        {/*<Table rows={data} headColumns={headColumns}/>*/}
         {showConsole ?
             <Console.Component className='console' msgClasses={CONSOLE_CLASSES} messages={log.lastMessages}
                                onReport={() => setShowConsole(false)}/>

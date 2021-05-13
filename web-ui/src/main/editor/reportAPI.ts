@@ -113,6 +113,7 @@ export class ReportAPI {
 
     query(query: {}, context: any, projection?: MongoProjection, limit?: number, offset?: number, sort?: {}) {
         const startTime = new Date().getTime()
+        console.log(query);
         let queryRequest = this._requestBuilder({query, context, projection, limit, offset, sort});
         let request = new XMLHttpRequest();
         request.open("POST", queryRequest.url, false);

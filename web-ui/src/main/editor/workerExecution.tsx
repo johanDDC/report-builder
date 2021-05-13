@@ -5,6 +5,16 @@ export class WorkerManager {
     private _currentExecution: ExecutionImpl
     private _disposed = false
 
+    // runCode(code: string, scheme: SchemeCollection): Promise<MessageEvent> {
+    //     let worker = this.getWorker();
+    //     if (worker == null) {
+    //         alert("Problem with worker initialization");
+    //         return;
+    //     }
+    //     worker.postMessage({code: code, scheme: scheme});
+    //     return new Promise(resolve => worker.onmessage = (response) => resolve(response));
+    // }
+
     constructor(private readonly _workerUrl: string) {}
 
     /**
@@ -92,7 +102,7 @@ class ExecutionImpl implements Execution {
     start(code: string) {
         if (!this._worker) throw Error('Cannot start: has no worker')
         if (!this._state.running) throw Error('Cannot start: already done')
-        this._worker.postMessage(code)
+        this._worker.postMessage(code);
     }
 
     terminate(reason: string) {
