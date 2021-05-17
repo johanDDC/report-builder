@@ -24,7 +24,7 @@ declare interface ReportAPI {
    */
   breakpoint(): void
 
-  table(data: Array<JSON>, name?: string, headColumns?: string[]): void
+  table(data: {}[] , name?: string, headColumns?: string[]): void
 
   configure(headColumns?: string[]): void
 }
