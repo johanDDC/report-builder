@@ -1,6 +1,7 @@
+/// <reference path="../../../node_modules/@types/babel__core/index.d.ts" />
 import * as React from 'react';
 import {EditorController, Languages} from "./monacoController";
-import * as Babel from "babel__core";
+import * as Babel from "@babel/core";
 
 export namespace MIME {
   export const TS = 'application/typescript'
