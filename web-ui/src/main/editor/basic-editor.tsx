@@ -10,14 +10,9 @@ import {EditorController} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 // @ts-ignore
 import {
-    Decimal, DecimalDeclaration, DecimalImplementation,
     parseType,
-    queryBuildersGenerator,
-    SchemeCollection,
-    typesGenerator
 } from "./types/queryTypes";
 import TS = MIME.TS;
-import JS = MIME.JS;
 
 const messagesSource = [
     "const messages = {",
@@ -29,6 +24,12 @@ import * as Console from './console'
 import {MessageCssType} from './console'
 // @ts-ignore
 import REPORT_API_TYPES from '!!raw-loader!./types-ReportAPI.d.ts';
+// @ts-ignore
+import PREDEF from '!!raw-loader!./types2/predef';
+import {Mongo} from "./types2/predef";
+import Decimal = Mongo.Decimal;
+import * as Generator from "./types2/tsGenerator";
+import * as Code from "./types2/code";
 
 export function toCSV<T>(rows: T[], columns: { header: string, renderer: (t: T) => string }[]): string {
     /* https://tools.ietf.org/html/rfc4180#page-2 */
@@ -143,7 +144,7 @@ export function Table(props: { rows: any[], headColumns?: string[] }) {
             return JSON.stringify(record);
         } else {
             if (elem instanceof Decimal) {
-                return elem.asString();
+                return elem.text;
             } else if (elem instanceof Date) {
                 return elem.toLocaleDateString();
             } else if (elem != null) {
@@ -169,22 +170,36 @@ function MaxRowsTextarea() {
                   }}/>;
 }
 
-const realScheme: SchemeCollection = {
-    type: {
-        "_id": {type: "objectId"},
-        "show_id": {type: "string"},
-        "type": {type: "string"},
-        "title": {type: "string"},
-        "director": {type: "string"},
-        "cast": {arr: true, type: "string"},
-        "country": {type: "string"},
-        "date_added": {type: "datetime"},
-        "release_year": {type: "int32"},
-        "rating": {type: "string"},
-        "duration": {type: {seasons: {type: "int32"}, mins: {type: "int32"}}},
-        "listed_in": {arr: true, type: "string"},
-        "description": {type: "string"},
-        "dec": {type: "decimal128"}
+const netflixSchema = {
+    name: "Netflix",
+    query:{_TYPE:"ARecord_Type"},
+    "element": {
+        "_id": "reference",
+        "show_id": "string",
+        "type": "string",
+        "title": "string",
+        "director": "string",
+        // "cast": {arr: true, "element": "string"},
+        "country": "string",
+        "date_added": "datetime",
+        "release_year": "int32",
+        "rating": "string",
+        "duration": {"seasons": "int32", "mins": "int32"},
+        // "listed_in": {arr: true, "element": "string"},
+        "description": "string",
+        "dec": "decimal"
+    }
+}
+
+const netflixSettings : Generator.Settings = {
+    enum: Generator.defaultEnumFieldGenerator,
+    primitives: {
+        reference: Generator.DEFAULT_ID_FIELD,
+        int64: Generator.DEFAULT_NUMBER_FIELD,
+        decimal: Generator.DEFAULT_DECIMAL_FIELD,
+        dateTime: Generator.createDefaultDateField("DATE_TIME"),
+        date: Generator.createDefaultDateField("DATE"),
+        string: Generator.DEFAULT_STRING_FIELD,
     }
 }
 
@@ -206,20 +221,24 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const editor = ReportEditorController.use()
     const editorTypes = EditorController.use()
     const editorCode = EditorController.use()
-    let [buildersCode, buildersTypes] = queryBuildersGenerator(realScheme, "Collection")
-    let generatedTypes = typesGenerator(realScheme);
     // @ts-ignore
     const log = Console.Collector.use()
     const [showConsole, setShowConsole] = React.useState(true)
     const [addLib, setAddLib] = React.useState(true)
+
+    const generatedTypes = new Code.Builder(2);
+    const namspaceNetflix = generatedTypes.appendBlock('namespace _netflix {', '}');
+    Generator.generateTypes(namspaceNetflix, [netflixSchema], netflixSettings)
+
+    const constNetflix = generatedTypes.appendBlock('const Collection = {', '}')
+    Generator.generateBuilderConstants(constNetflix, '_netflix', '', [netflixSchema])
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
-        editor.setApiExtension("decimal", DecimalDeclaration, {mime: TS, text: DecimalImplementation});
-        editor.setApiExtension('api', generatedTypes, null);
-        editor.setApiExtension('builder', buildersTypes, {mime: JS, text: buildersCode});
+        editor.setApiExtension('predef', PREDEF, {text: PREDEF, mime: TS});
+        editor.setApiExtension('code', generatedTypes.build(), {text: generatedTypes.build(), mime: TS});
         editor.controller.codeText = code;
-        editorTypes.codeText = generatedTypes + "\n" + buildersTypes;
-        editorCode.codeText = buildersCode;
+        editorTypes.codeText = generatedTypes.build();
+        editorCode.codeText = PREDEF;
     }, [code])
 
     const showCode = React.useCallback(() => {
@@ -274,7 +293,7 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
         <MaxRowsTextarea/>
         <div style={{width: "100%", display: "flex", flexDirection: "row", height: "400px"}}>
             <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorTypes}/>
-            <MonacoEditor style={{height: "100%", width: "50%"}} language='javascript' controller={editorCode}/>
+            <MonacoEditor style={{height: "100%", width: "50%"}} language='typescript' controller={editorCode}/>
         </div>
         {/*<Table rows={data} headColumns={headColumns}/>*/}
         {showConsole ?
