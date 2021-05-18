@@ -39,6 +39,15 @@ export const DEFAULT_DECIMAL_FIELD: PrimitiveDescriptor = {
   jsType: 'Util.Mongo.MDecimal'
 }
 
+export const DEFAULT_STRING_FIELD: PrimitiveDescriptor = {
+  generate(queryBuilder, builderName, field) {
+    queryBuilder.appendBlock(`get ${field}(): Util.Constraints.ComparisonConstraintBuilder<string, string, ${builderName}> {`, '}')
+        .appendLine(`return new Util.Constraints.ComparisonConstraintBuilder<string, string, ${builderName}>(this, '${field}', Util.Types.STRING)`)
+  },
+  jsType: 'string'
+}
+
+
 export function createDefaultDateField(type: "DATE" | "DATE_TIME"): PrimitiveDescriptor {
   return {
     generate: (queryBuilder, builderName, field) => {
