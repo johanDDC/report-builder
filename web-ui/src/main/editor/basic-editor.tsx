@@ -171,6 +171,7 @@ function MaxRowsTextarea() {
 }
 
 const netflixSchema = {
+    collection: "testCollection",
     name: "Netflix",
     query:{_TYPE:"ARecord_Type"},
     "element": {
@@ -228,10 +229,11 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
 
     const generatedTypes = new Code.Builder(2);
     const namspaceNetflix = generatedTypes.appendBlock('namespace _netflix {', '}');
+    namspaceNetflix.appendLine(`export const NETFLIX_IMAGE = '${netflixSchema.collection}'`)
     Generator.generateTypes(namspaceNetflix, [netflixSchema], netflixSettings)
 
     const constNetflix = generatedTypes.appendBlock('const Collection = {', '}')
-    Generator.generateBuilderConstants(constNetflix, '_netflix', '', [netflixSchema])
+    Generator.generateBuilderConstants(constNetflix, '_netflix', '_netflix.NETFLIX_IMAGE', [netflixSchema])
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
         editor.setApiExtension('predef', PREDEF, {text: PREDEF, mime: TS});
