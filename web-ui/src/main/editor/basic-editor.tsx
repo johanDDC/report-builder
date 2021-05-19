@@ -145,6 +145,7 @@ export function Table(props: { rows: any[], headColumns?: string[] }) {
             }
             return obj;
         }
+
         if (record == null) {
             return null;
         }
@@ -182,7 +183,7 @@ function MaxRowsTextarea() {
 const netflixSchema = {
     collection: "testCollection",
     name: "Netflix",
-    query:{_TYPE:"ARecord_Type"},
+    query: {_TYPE: "ARecord_Type"},
     "element": {
         "_id": "reference",
         "show_id": "string",
@@ -201,7 +202,7 @@ const netflixSchema = {
     }
 }
 
-const netflixSettings : Generator.Settings = {
+const netflixSettings: Generator.Settings = {
     enum: Generator.defaultEnumFieldGenerator,
     primitives: {
         reference: Generator.DEFAULT_ID_FIELD,
