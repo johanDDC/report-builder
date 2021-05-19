@@ -237,6 +237,8 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     const [addLib, setAddLib] = React.useState(true)
 
     const generatedTypes = new Code.Builder(2);
+    const predef = generatedTypes.appendBlock("namespace Util {", "}");
+    predef.append(PREDEF);
     const namspaceNetflix = generatedTypes.appendBlock('namespace _netflix {', '}');
     namspaceNetflix.appendLine(`export const NETFLIX_IMAGE = '${netflixSchema.collection}'`)
     Generator.generateTypes(namspaceNetflix, [netflixSchema], netflixSettings)
@@ -245,11 +247,10 @@ export function BasicEditor({workerManager, code}: { workerManager: WorkerManage
     Generator.generateBuilderConstants(constNetflix, '_netflix', '_netflix.NETFLIX_IMAGE', [netflixSchema])
     React.useEffect(() => {
         editor.setApiExtension('messageSource', messagesSource, null) // No harm to set the same content several times
-        editor.setApiExtension('predef', PREDEF, {text: PREDEF, mime: TS});
         editor.setApiExtension('code', generatedTypes.build(), {text: generatedTypes.build(), mime: TS});
         editor.controller.codeText = code;
         editorTypes.codeText = generatedTypes.build();
-        editorCode.codeText = PREDEF;
+        editorCode.codeText = predef.build();
     }, [code])
 
     const showCode = React.useCallback(() => {
