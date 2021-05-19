@@ -29,4 +29,4 @@ declare interface ReportAPI {
   configure(headColumns?: string[]): void
 }
 
-declare const api: ReportAPI
+declare const env: ReportAPI

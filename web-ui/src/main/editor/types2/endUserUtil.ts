@@ -97,7 +97,7 @@ namespace EndUserUtils {
 
     const columns = collectColumns()
     const convertedData = theData.map(row => convertRow(columns, row));
-    api.table(convertedData, theName)
+    env.table(convertedData, theName)
   }
 }
 
