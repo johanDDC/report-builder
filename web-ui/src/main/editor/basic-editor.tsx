@@ -9,9 +9,6 @@ import {WorkerManager} from "./workerExecution";
 import {EditorController} from "./monacoController";
 import {MIME, ReportEditorController} from "./reportEditor";
 // @ts-ignore
-import {
-    parseType,
-} from "./types/queryTypes";
 import TS = MIME.TS;
 
 const messagesSource = [
@@ -136,6 +133,18 @@ export function Table(props: { rows: any[], headColumns?: string[] }) {
     </table>;
 
     function stringifyElem(record: null | object) {
+        function parseType(obj: object) {
+            if (obj["$date"]) {
+                return new Date(obj["$date"]);
+            }
+            if (obj["$numberDecimal"]) {
+                return new Decimal(obj["$numberDecimal"]);
+            }
+            if (obj["$oid"]) {
+                return obj["$oid"];
+            }
+            return obj;
+        }
         if (record == null) {
             return null;
         }
